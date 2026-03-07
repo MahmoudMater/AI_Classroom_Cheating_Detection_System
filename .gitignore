@@ -1,0 +1,13 @@
+# Root workspace
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+.env
+.env.*
+!.env.example
+
+# Subfolders (frontend, backend, ai-service) use their own .gitignore
+# for node_modules, venv, dist, etc.
