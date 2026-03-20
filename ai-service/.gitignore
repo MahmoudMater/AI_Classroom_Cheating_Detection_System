@@ -46,3 +46,14 @@ dmypy.json
 
 # Jupyter
 .ipynb_checkpoints/
+
+# data
+data_merged/
+Data/
+snapshots/
+
+# training/inference artifacts
+runs/
+*.pt
+*.pth
+*.onnx

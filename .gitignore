@@ -11,3 +11,9 @@ Thumbs.db
 
 # Subfolders (frontend, backend, ai-service) use their own .gitignore
 # for node_modules, venv, dist, etc.
+
+# workspace-level generated artifacts
+runs/
+*.log
+ai-service/data_merged/
+ai-service/snapshots/
