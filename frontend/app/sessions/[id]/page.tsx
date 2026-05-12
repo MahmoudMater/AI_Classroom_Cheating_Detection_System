@@ -7,15 +7,15 @@ import { useCallback, useEffect, useState } from "react"
 import { EventLog } from "@/components/proctoring/EventLog"
 import { LiveFeed } from "@/components/proctoring/LiveFeed"
 import { StatsPanel } from "@/components/proctoring/StatsPanel"
-import { SummaryCharts } from "@/components/proctoring/SummaryCharts"
 import { UploadVideoModal } from "@/components/proctoring/UploadVideoModal"
 import { Separator } from "@/components/ui/separator"
+import { BarChart3, ChevronRight, Upload, Play, Square, ExternalLink } from "lucide-react"
 import { exportEventsUrl } from "@/lib/api"
 import { useProctoring } from "@/lib/hooks/useProctoring"
 import { useSession } from "@/lib/hooks/useSession"
 import type { EventResponse, FrameMessage, SessionStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { LiveDot } from "@/components/brand-ui"
+import { LiveDot, PremiumButton } from "@/components/brand-ui"
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: SessionStatus }) {
@@ -255,6 +255,14 @@ export default function SessionDetailPage() {
                 </svg>
                 Upload Video
               </CtrlBtn>
+
+              <Link href={`/sessions/${id}/analysis`}>
+                <PremiumButton variant="secondary" size="sm" className="h-9 px-4 bg-white/5 border-white/10 hover:bg-[#3B9EE8]/10 hover:text-[#3B9EE8] transition-all">
+                  <BarChart3 className="size-3.5" />
+                  View Detailed Analysis
+                  <ExternalLink className="size-3 ml-1 opacity-40" />
+                </PremiumButton>
+              </Link>
             </div>
 
             {/* Live Feed */}
@@ -288,17 +296,6 @@ export default function SessionDetailPage() {
                   Live Events
                 </TabBtn>
                 <TabBtn
-                  active={tab === "summary"}
-                  onClick={() => setTab("summary")}
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/>
-                    </svg>
-                  }
-                >
-                  Summary
-                </TabBtn>
-                <TabBtn
                   active={tab === "export"}
                   onClick={() => setTab("export")}
                   icon={
@@ -315,9 +312,6 @@ export default function SessionDetailPage() {
               <div className="p-4">
                 {tab === "events" && (
                   <EventLog sessionId={id} liveEvents={liveCheating} />
-                )}
-                {tab === "summary" && (
-                  <SummaryCharts sessionId={id} />
                 )}
                 {tab === "export" && (
                   <div className="flex flex-col gap-4">

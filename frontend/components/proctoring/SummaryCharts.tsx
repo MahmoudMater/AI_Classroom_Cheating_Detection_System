@@ -1,154 +1,43 @@
 "use client"
 
-import {
-  Alert02Icon,
-  Book01Icon,
-  CheckmarkCircle02Icon,
-  LaptopIcon,
-  Notebook01Icon,
-  SmartPhone01Icon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
+import ReactECharts from "echarts-for-react"
+import * as echarts from "echarts"
+import { 
+  BarChart3, 
+  Activity, 
+  Target, 
+  Users, 
+  AlertTriangle, 
+  ArrowUpRight, 
+  Clock, 
+  Shield, 
+  Smartphone, 
+  Laptop, 
+  Book, 
+  FileText,
+  Map as MapIcon
+} from "lucide-react"
 
 import { getEventSummary } from "@/lib/api"
 import type { EventSummary } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { GlassCard, SectionLabel, BrandBadge } from "@/components/brand-ui"
 
 export interface SummaryChartsProps {
   sessionId: string
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const CONFIDENCE_RANGES = ["0-20%", "20-40%", "40-60%", "60-80%", "80-100%"]
-const CONFIDENCE_COLORS = ["#10B981", "#3B9EE8", "#F59E0B", "#f97316", "#EF4444"]
-
-function formatPeakMinute(raw: string | null): string {
-  if (raw == null || raw === "") return "None"
-  if (/^\d{1,2}:\d{2}$/.test(raw)) return raw
-  const n = Number(raw)
-  if (!Number.isNaN(n) && Number.isFinite(n)) {
-    const h = Math.floor(n / 60) % 24
-    const m = Math.floor(n) % 60
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
-  }
-  const t = Date.parse(raw)
-  if (!Number.isNaN(t)) {
-    const d = new Date(t)
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
-  }
-  return raw
+const THEME_COLORS = {
+  blue: "#3B9EE8",
+  red: "#EF4444",
+  green: "#10B981",
+  amber: "#F59E0B",
+  text: "#94A3B8",
+  border: "rgba(255, 255, 255, 0.05)",
+  bg: "rgba(10, 15, 26, 0.4)"
 }
-
-function scoreTone(score0to100: number) {
-  if (score0to100 < 30) return { text: "text-[#10B981]", stroke: "#10B981" }
-  if (score0to100 <= 70) return { text: "text-[#F59E0B]", stroke: "#F59E0B" }
-  return { text: "text-[#EF4444]", stroke: "#EF4444" }
-}
-
-function buildDirKeys(data: EventSummary | null): string[] {
-  if (!data) return []
-  const fromHeat = [...new Set(data.direction_over_time.map((d) => d.direction))]
-  const fromAgg = Object.keys(data.events_by_direction)
-  const merged = [...new Set([...fromHeat, ...fromAgg])]
-  return merged
-    .map((d) => ({ d, c: data.events_by_direction[d] ?? 0 }))
-    .sort((a, b) => b.c - a.c)
-    .slice(0, 6)
-    .map((s) => s.d)
-}
-
-function buildMinuteCols(data: EventSummary | null): string[] {
-  if (!data) return []
-  const mins = [...new Set(data.direction_over_time.map((d) => d.minute))]
-  mins.sort((a, b) => {
-    const na = Number(a); const nb = Number(b)
-    if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb
-    return String(a).localeCompare(String(b))
-  })
-  return mins.slice(-20)
-}
-
-function buildByPerson(data: EventSummary | null) {
-  if (!data) return [] as [number, EventSummary["persons_timeline"]][]
-  const m = new Map<number, EventSummary["persons_timeline"]>()
-  for (const row of data.persons_timeline) {
-    const arr = m.get(row.person_id) ?? []
-    arr.push(row)
-    m.set(row.person_id, arr)
-  }
-  for (const arr of m.values()) {
-    arr.sort((a, b) => String(a.minute).localeCompare(String(b.minute)))
-  }
-  return [...m.entries()].sort((a, b) => a[0] - b[0])
-}
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-function ObjectGlyph({ name }: { name: string }) {
-  const n = name.toLowerCase()
-  let icon = Alert02Icon
-  if (n.includes("phone") || n.includes("mobile")) icon = SmartPhone01Icon
-  else if (n.includes("book")) icon = Book01Icon
-  else if (n.includes("laptop")) icon = LaptopIcon
-  else if (n.includes("notebook") || n.includes("paper")) icon = Notebook01Icon
-  return <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-7 text-[#94A3B8]" />
-}
-
-function RiskRing({ score, stroke }: { score: number; stroke: string }) {
-  const r = 34
-  const c = 2 * Math.PI * r
-  const p = Math.min(100, Math.max(0, score)) / 100
-  return (
-    <svg viewBox="0 0 88 88" className="size-24 shrink-0" aria-hidden>
-      <circle cx="44" cy="44" r={r} fill="none" className="stroke-[rgba(59,158,232,0.1)]" strokeWidth="7" />
-      <circle
-        cx="44" cy="44" r={r} fill="none"
-        stroke={stroke} strokeWidth="7"
-        strokeDasharray={`${c} ${c}`}
-        strokeDashoffset={c * (1 - p)}
-        transform="rotate(-90 44 44)"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function Skeleton() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 animate-pulse rounded-xl bg-[rgba(59,158,232,0.06)] border border-[rgba(59,158,232,0.1)]" />
-        ))}
-      </div>
-      <div className="h-44 animate-pulse rounded-xl bg-[rgba(59,158,232,0.06)] border border-[rgba(59,158,232,0.1)]" />
-    </div>
-  )
-}
-
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn("rounded-xl border border-[rgba(59,158,232,0.15)] bg-[#151C2C]", className)}>
-      {children}
-    </div>
-  )
-}
-
-function CardHead({ title, icon }: { title: string; icon: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 border-b border-[rgba(59,158,232,0.1)] px-4 py-3">
-      <span className="text-[#3B9EE8]">{icon}</span>
-      <h3 className="font-['Space_Grotesk',sans-serif] text-[12px] font-semibold uppercase tracking-[0.06em] text-[#94A3B8]">
-        {title}
-      </h3>
-    </div>
-  )
-}
-
-// ─── Main component ────────────────────────────────────────────────────────────
 
 export function SummaryCharts({ sessionId }: SummaryChartsProps) {
   const [data, setData] = useState<EventSummary | null>(null)
@@ -171,397 +60,432 @@ export function SummaryCharts({ sessionId }: SummaryChartsProps) {
     return () => { cancelled = true }
   }, [sessionId])
 
-  const dirKeys = useMemo(() => buildDirKeys(data), [data])
-  const minuteCols = useMemo(() => buildMinuteCols(data), [data])
-  const byPerson = useMemo(() => buildByPerson(data), [data])
+  // ── Timeline Option ────────────────────────────────────────────────────────
+  const timelineOption = useMemo(() => {
+    if (!data) return {}
+    const timeline = data.timeline
+    return {
+      backgroundColor: "transparent",
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: "rgba(13, 20, 34, 0.9)",
+        borderColor: "rgba(59, 158, 232, 0.2)",
+        textStyle: { color: "#fff", fontSize: 12 },
+        borderWidth: 1,
+        formatter: (params: any) => {
+          let res = `<div className="font-mono text-[10px] mb-1">MINUTE ${params[0].name}</div>`
+          params.forEach((item: any) => {
+            res += `<div className="flex items-center gap-2">
+              <div className="size-2 rounded-full" style="background: ${item.color}"></div>
+              <span className="text-white/40 uppercase text-[9px] font-bold">${item.seriesName}:</span>
+              <span className="text-white font-bold">${item.value}</span>
+            </div>`
+          })
+          return res
+        }
+      },
+      legend: {
+        data: ["Cheating", "Normal"],
+        textStyle: { color: THEME_COLORS.text, fontSize: 10, fontWeight: "bold" },
+        right: 0,
+        icon: "circle"
+      },
+      grid: { left: "2%", right: "2%", bottom: "3%", top: "15%", containLabel: true },
+      xAxis: {
+        type: "category",
+        data: timeline.map(t => t.minute),
+        axisLine: { lineStyle: { color: "rgba(255,255,255,0.05)" } },
+        axisLabel: { color: THEME_COLORS.text, fontSize: 10, fontFamily: "monospace" }
+      },
+      yAxis: {
+        type: "value",
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.03)", type: "dashed" } },
+        axisLabel: { color: THEME_COLORS.text, fontSize: 10, fontFamily: "monospace" }
+      },
+      series: [
+        {
+          name: "Cheating",
+          type: "line",
+          smooth: true,
+          symbolSize: 8,
+          lineStyle: { width: 3, color: THEME_COLORS.red },
+          itemStyle: { color: THEME_COLORS.red },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "rgba(239, 68, 68, 0.2)" },
+              { offset: 1, color: "rgba(239, 68, 68, 0)" }
+            ])
+          },
+          data: timeline.map(t => t.cheating)
+        },
+        {
+          name: "Normal",
+          type: "line",
+          smooth: true,
+          symbolSize: 8,
+          lineStyle: { width: 3, color: THEME_COLORS.green },
+          itemStyle: { color: THEME_COLORS.green },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "rgba(16, 185, 129, 0.1)" },
+              { offset: 1, color: "rgba(16, 185, 129, 0)" }
+            ])
+          },
+          data: timeline.map(t => t.ok)
+        }
+      ]
+    }
+  }, [data])
 
-  if (loading && !data) return <Skeleton />
-  if (!data) return <p className="text-[13px] text-[#64748B]">No summary data yet.</p>
+  // ── Confidence Option ──────────────────────────────────────────────────────
+  const confidenceOption = useMemo(() => {
+    if (!data) return {}
+    const conf = data.confidence_distribution
+    return {
+      backgroundColor: "transparent",
+      tooltip: {
+        trigger: "item",
+        backgroundColor: "rgba(13, 20, 34, 0.9)",
+        borderColor: "rgba(59, 158, 232, 0.2)",
+        textStyle: { color: "#fff" }
+      },
+      grid: { left: "10%", right: "10%", bottom: "10%", top: "10%", containLabel: true },
+      xAxis: {
+        type: "value",
+        axisLabel: { show: false },
+        splitLine: { show: false }
+      },
+      yAxis: {
+        type: "category",
+        data: conf.map(c => c.range).reverse(),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: THEME_COLORS.text, fontSize: 10, fontWeight: "bold" }
+      },
+      series: [
+        {
+          type: "bar",
+          data: conf.map(c => c.count).reverse(),
+          itemStyle: {
+            color: (params: any) => {
+              const colors = ["#EF4444", "#f97316", "#F59E0B", "#3B9EE8", "#10B981"].reverse()
+              return colors[params.dataIndex]
+            },
+            borderRadius: [0, 4, 4, 0]
+          },
+          barWidth: "60%",
+          label: {
+            show: true,
+            position: "right",
+            color: "#fff",
+            fontSize: 10,
+            fontFamily: "monospace"
+          }
+        }
+      ]
+    }
+  }, [data])
+
+  // ── Direction Option ───────────────────────────────────────────────────────
+  const directionOption = useMemo(() => {
+    if (!data) return {}
+    const dirs = Object.entries(data.events_by_direction).sort((a, b) => b[1] - a[1])
+    return {
+      backgroundColor: "transparent",
+      tooltip: {
+        trigger: "item",
+        backgroundColor: "rgba(13, 20, 34, 0.9)",
+        borderColor: "rgba(59, 158, 232, 0.2)",
+        textStyle: { color: "#fff" }
+      },
+      series: [
+        {
+          type: "pie",
+          radius: ["40%", "70%"],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 10,
+            borderColor: "#0A0F1A",
+            borderWidth: 2
+          },
+          label: {
+            show: false,
+            position: "center"
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 14,
+              fontWeight: "bold",
+              color: "#fff"
+            }
+          },
+          labelLine: { show: false },
+          data: dirs.map(([name, value]) => ({ 
+            name: name.toUpperCase(), 
+            value,
+            itemStyle: { 
+              color: name.toLowerCase().includes("gaze") ? THEME_COLORS.amber : THEME_COLORS.blue 
+            }
+          }))
+        }
+      ]
+    }
+  }, [data])
+
+  if (loading && !data) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-32 bg-white/5 rounded-2xl border border-white/10" />
+        ))}
+        <div className="col-span-full h-80 bg-white/5 rounded-2xl border border-white/10" />
+      </div>
+    )
+  }
+
+  if (!data) return null
 
   const riskPct = Math.min(100, Math.max(0, data.risk_score))
   const cheatRatePct = Math.min(100, Math.max(0, data.cheating_rate * 100))
-  const riskStyle = scoreTone(riskPct)
-  const rateStyle = scoreTone(cheatRatePct)
-
-  // Timeline chart
-  const timeline = data.timeline
-  const maxT = Math.max(1, ...timeline.map((t) => t.cheating + t.ok))
-  const nT = timeline.length
-  const chartW = 460; const chartH = 120; const pad = 24; const iW = chartW - pad * 2; const iH = chartH - pad * 2
-  const toX = (i: number) => pad + (nT <= 1 ? iW / 2 : (i / (nT - 1)) * iW)
-  const toY = (v: number) => pad + iH - (v / maxT) * iH
-  const cheatingPts = timeline.map((t, i) => ({ x: toX(i), y: toY(t.cheating), ...t }))
-  const okPts = timeline.map((t, i) => ({ x: toX(i), y: toY(t.ok) }))
-
-  // Confidence
-  const confMap = new Map(data.confidence_distribution.map((c) => [c.range, c.count]))
-  const confRows = CONFIDENCE_RANGES.map((range) => ({ range, count: confMap.get(range) ?? 0 }))
-  const maxConf = Math.max(1, ...confRows.map((r) => r.count))
-
-  // Direction over time heatmap
-  const dirTime = data.direction_over_time
-  const heatMax = Math.max(1, ...dirTime.map((d) => d.count))
-  const heatCell = (dir: string, minute: string) => {
-    const c = dirTime.find((d) => d.direction === dir && d.minute === minute)?.count ?? 0
-    const op = c / heatMax
-    return { c, opacity: op }
-  }
-
-  const directionsBreakdown = Object.entries(data.events_by_direction).sort((a, b) => b[1] - a[1])
-  const totalDir = Math.max(1, directionsBreakdown.reduce((s, [, v]) => s + v, 0))
-  const suspiciousId = data.most_suspicious_person?.person_id
 
   return (
-    <div className="flex flex-col gap-4">
-
-      {/* ── KPI row ── */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {/* Risk ring */}
-        <Card className="flex flex-col items-center gap-1 p-4">
-          <div className="relative flex items-center justify-center">
-            <RiskRing score={riskPct} stroke={riskStyle.stroke === "text-[#10B981]" ? "#10B981" : riskStyle.stroke === "text-[#F59E0B]" ? "#F59E0B" : "#EF4444"} />
-            <span className={cn("absolute font-mono text-2xl font-bold tabular-nums", riskStyle.text)}>
-              {riskPct.toFixed(0)}
-            </span>
+    <div className="flex flex-col gap-8">
+      {/* ── KPI Grid ─────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <GlassCard className="p-6 border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent group hover:border-[#3B9EE8]/30 transition-all duration-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="size-10 rounded-xl bg-[#EF4444]/10 flex items-center justify-center text-[#EF4444]">
+              <Target className="size-5" />
+            </div>
+            <BrandBadge variant="red" className="text-[9px] uppercase tracking-widest font-bold">Critical</BrandBadge>
           </div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Risk Score</p>
-        </Card>
+          <div className="space-y-1">
+            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Aggregate Risk</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-white tabular-nums tracking-tighter">{riskPct.toFixed(0)}</span>
+              <span className="text-sm font-bold text-white/20">/100</span>
+            </div>
+          </div>
+          <div className="mt-4 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-[#EF4444] to-[#f97316] rounded-full" style={{ width: `${riskPct}%` }} />
+          </div>
+        </GlassCard>
 
-        {/* Cheating rate */}
-        <Card className="flex flex-col justify-center gap-1 p-4">
-          <p className={cn("font-mono text-3xl font-bold tabular-nums", rateStyle.text)}>
-            {cheatRatePct.toFixed(1)}%
-          </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Cheating rate</p>
-        </Card>
+        <GlassCard className="p-6 border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent group hover:border-[#3B9EE8]/30 transition-all duration-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="size-10 rounded-xl bg-[#3B9EE8]/10 flex items-center justify-center text-[#3B9EE8]">
+              <Activity className="size-5" />
+            </div>
+            <BrandBadge variant="blue" className="text-[9px] uppercase tracking-widest font-bold">Efficiency</BrandBadge>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Cheating Rate</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-white tabular-nums tracking-tighter">{cheatRatePct.toFixed(1)}</span>
+              <span className="text-sm font-bold text-white/20">%</span>
+            </div>
+          </div>
+          <div className="mt-4 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-[#3B9EE8] to-[#10B981] rounded-full" style={{ width: `${cheatRatePct}%` }} />
+          </div>
+        </GlassCard>
 
-        {/* Peak minute */}
-        <Card className="flex flex-col justify-center gap-1 p-4">
-          <p className="font-mono text-2xl font-bold tabular-nums text-[#E2E8F0]">
-            {formatPeakMinute(data.peak_cheating_minute)}
-          </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Peak minute</p>
-        </Card>
+        <GlassCard className="p-6 border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent group hover:border-[#3B9EE8]/30 transition-all duration-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="size-10 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B]">
+              <Clock className="size-5" />
+            </div>
+            <BrandBadge variant="amber" className="text-[9px] uppercase tracking-widest font-bold">Temporal</BrandBadge>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Peak Activity</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-white tabular-nums tracking-tighter">{data.peak_cheating_minute || "00:00"}</span>
+              <span className="text-xs font-bold text-white/20 uppercase tracking-widest">MIN</span>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-1.5">
+             <div className="size-1.5 rounded-full bg-[#F59E0B] animate-pulse" />
+             <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">Highest Frequency Detected</span>
+          </div>
+        </GlassCard>
 
-        {/* Most suspicious */}
-        <Card className="flex flex-col justify-center gap-2 p-4">
-          <p className="text-[15px] font-bold text-[#F59E0B]">
-            {data.most_suspicious_person ? `Person ${data.most_suspicious_person.person_id}` : "None"}
-          </p>
-          {data.most_suspicious_person && (
-            <span className="inline-flex w-fit items-center rounded-full border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.08)] px-2 py-0.5 font-mono text-[9px] font-bold text-[#EF4444]">
-              {data.most_suspicious_person.cheating_events} incidents
-            </span>
-          )}
-          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Most suspicious</p>
-        </Card>
+        <GlassCard className="p-6 border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent group hover:border-[#3B9EE8]/30 transition-all duration-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-white/60">
+              <Users className="size-5" />
+            </div>
+            <BrandBadge variant="muted" className="text-[9px] uppercase tracking-widest font-bold">Subjects</BrandBadge>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Most Suspicious</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-white tracking-tighter">
+                {data.most_suspicious_person ? `Person ${data.most_suspicious_person.person_id}` : "None"}
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 text-[10px] font-mono text-white/40 uppercase tracking-widest flex justify-between">
+             <span>Incidents: <span className="text-[#EF4444] font-bold">{data.most_suspicious_person?.cheating_events || 0}</span></span>
+          </div>
+        </GlassCard>
       </div>
 
-      {/* ── Timeline chart ── */}
-      <Card>
-        <CardHead title="Cheating activity over time" icon={
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-        } />
-        <div className="p-4">
-          {timeline.length === 0 ? (
-            <p className="text-[13px] text-[#64748B]">No timeline data yet</p>
-          ) : (
-            <>
-              <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" role="img" aria-label="Activity over time">
-                {/* Grid lines */}
-                {[0.25, 0.5, 0.75].map((f) => (
-                  <line key={f} x1={pad} y1={pad + iH * (1 - f)} x2={chartW - pad} y2={pad + iH * (1 - f)}
-                    stroke="rgba(59,158,232,0.06)" strokeWidth="1" />
-                ))}
-                {/* Cheating fill */}
-                <path
-                  fill="rgba(239,68,68,0.1)"
-                  d={[
-                    `M ${cheatingPts[0]?.x} ${chartH - pad}`,
-                    ...cheatingPts.map((p) => `L ${p.x} ${p.y}`),
-                    `L ${cheatingPts[cheatingPts.length - 1]?.x} ${chartH - pad}`,
-                    "Z",
-                  ].join(" ")}
-                />
-                {/* OK fill */}
-                <path
-                  fill="rgba(16,185,129,0.07)"
-                  d={[
-                    `M ${okPts[0]?.x} ${chartH - pad}`,
-                    ...okPts.map((p) => `L ${p.x} ${p.y}`),
-                    `L ${okPts[okPts.length - 1]?.x} ${chartH - pad}`,
-                    "Z",
-                  ].join(" ")}
-                />
-                {/* Lines */}
-                <polyline fill="none" stroke="#EF4444" strokeWidth="1.5" opacity={0.9}
-                  points={cheatingPts.map((p) => `${p.x},${p.y}`).join(" ")} />
-                <polyline fill="none" stroke="#10B981" strokeWidth="1.5" opacity={0.9}
-                  points={okPts.map((p) => `${p.x},${p.y}`).join(" ")} />
-                {/* Dots */}
-                {cheatingPts.map((p, i) => (
-                  <circle key={`c${i}`} cx={p.x} cy={p.y} r={2.5} fill="#EF4444">
-                    <title>{`Min ${p.minute}: cheating ${p.cheating}, ok ${p.ok}`}</title>
-                  </circle>
-                ))}
-                {okPts.map((p, i) => (
-                  <circle key={`o${i}`} cx={p.x} cy={p.y} r={2.5} fill="#10B981">
-                    <title>{`Min ${timeline[i]?.minute}: ok ${timeline[i]?.ok}`}</title>
-                  </circle>
-                ))}
-              </svg>
-              <div className="mt-2 flex gap-4">
-                <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#94A3B8]">
-                  <span className="inline-block size-2 rounded-full bg-[#EF4444]" />CHEATING
-                </span>
-                <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#94A3B8]">
-                  <span className="inline-block size-2 rounded-full bg-[#10B981]" />OK
-                </span>
-              </div>
-            </>
-          )}
-        </div>
-      </Card>
-
-      {/* ── Confidence distribution ── */}
-      <Card>
-        <CardHead title="Cheat probability distribution" icon={
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/>
-          </svg>
-        } />
-        <div className="flex flex-col gap-2 p-4">
-          {data.total_events === 0 && confRows.every((r) => r.count === 0) ? (
-            <p className="text-[13px] text-[#64748B]">No events recorded yet</p>
-          ) : confRows.map((row, i) => (
-            <div key={row.range} className="flex items-center gap-3">
-              <span className="w-10 shrink-0 text-right font-mono text-[10px] text-[#64748B]">{row.range}</span>
-              <div className="relative h-4 flex-1 overflow-hidden rounded bg-[rgba(255,255,255,0.04)]">
-                <div
-                  className="h-full rounded transition-all duration-500"
-                  style={{ width: `${(row.count / maxConf) * 100}%`, background: CONFIDENCE_COLORS[i] ?? "#64748B", opacity: 0.85 }}
-                />
-              </div>
-              <span className="w-6 shrink-0 font-mono text-[10px] text-[#64748B] tabular-nums">{row.count}</span>
+      {/* ── Main Timeline ────────────────────────────────────────────────────── */}
+      <GlassCard className="p-8 border-white/10 bg-gradient-to-br from-white/[0.02] to-transparent">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <SectionLabel className="mb-1 text-[#3B9EE8]">Temporal Integrity Analysis</SectionLabel>
+            <p className="text-xs text-white/40">Correlation between normal behavior and detected anomalies over time.</p>
+          </div>
+          <div className="flex items-center gap-4 text-[10px] font-mono text-white/20 uppercase tracking-widest border border-white/5 px-4 py-2 rounded-lg bg-black/20">
+            <div className="flex items-center gap-2">
+              <div className="size-2 rounded-full bg-[#EF4444]" />
+              <span>Anomalies</span>
             </div>
-          ))}
+            <div className="flex items-center gap-2">
+              <div className="size-2 rounded-full bg-[#10B981]" />
+              <span>Standard</span>
+            </div>
+          </div>
         </div>
-      </Card>
+        <div className="h-[400px] w-full">
+          <ReactECharts option={timelineOption} style={{ height: "100%", width: "100%" }} theme="dark" />
+        </div>
+      </GlassCard>
 
-      {/* ── Direction heatmap + breakdown ── */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHead title="Direction over time" icon={
-            <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
-            </svg>
-          } />
-          <div className="overflow-x-auto p-4">
-            {dirTime.length === 0 ? (
-              <p className="text-[13px] text-[#64748B]">No direction-over-time data yet</p>
-            ) : (
-              <div
-                className="grid gap-0.5"
-                style={{ gridTemplateColumns: `minmax(4rem, auto) repeat(${minuteCols.length}, minmax(22px, 1fr))` }}
-              >
-                <div />
-                {minuteCols.map((m) => (
-                  <div key={m} className="pb-1 text-center font-mono text-[9px] leading-tight text-[#64748B] truncate" title={m}>
-                    {m.length > 5 ? `${m.slice(0, 4)}…` : m}
-                  </div>
-                ))}
-                {dirKeys.map((dir) => (
-                  <div key={dir} className="contents">
-                    <div className="flex items-center border-r border-[rgba(59,158,232,0.1)] pr-2 py-0.5 font-mono text-[9px] text-[#94A3B8] truncate">
-                      {dir.length > 12 ? `${dir.slice(0, 12)}…` : dir}
-                    </div>
-                    {minuteCols.map((min) => {
-                      const { c, opacity } = heatCell(dir, min)
-                      return (
-                        <div
-                          key={`${dir}-${min}`}
-                          className="m-0.5 size-5 rounded-sm border border-[rgba(59,158,232,0.08)]"
-                          style={{ background: `rgba(245,158,11,${opacity * 0.8})` }}
-                          title={`${dir} @ ${min}: ${c}`}
-                        />
-                      )
-                    })}
-                  </div>
-                ))}
+      {/* ── Distribution & Direction ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <GlassCard className="p-8 border-white/10">
+          <SectionLabel className="mb-6 text-[#3B9EE8]">Probability Distribution</SectionLabel>
+          <div className="h-[300px] w-full">
+            <ReactECharts option={confidenceOption} style={{ height: "100%", width: "100%" }} />
+          </div>
+          <div className="mt-6 p-4 rounded-xl bg-black/20 border border-white/5">
+             <p className="text-[10px] text-white/30 uppercase tracking-widest leading-relaxed">
+                Distribution of AI confidence levels across all detected events. High-risk clusters (80-100%) indicate confirmed cheating behaviors.
+             </p>
+          </div>
+        </GlassCard>
+
+        <GlassCard className="p-8 border-white/10">
+          <SectionLabel className="mb-6 text-[#3B9EE8]">Gaze & Orientation Breakdown</SectionLabel>
+          <div className="flex items-center justify-center h-[300px] w-full">
+            <ReactECharts option={directionOption} style={{ height: "100%", width: "100%" }} />
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            {Object.entries(data.events_by_direction).slice(0, 4).map(([dir, count]) => (
+              <div key={dir} className="p-3 rounded-lg bg-white/5 border border-white/5">
+                <div className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">{dir}</div>
+                <div className="text-lg font-bold text-white tabular-nums">{count}</div>
               </div>
+            ))}
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* ── Objects & Per-Person ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Suspicious Objects */}
+        <GlassCard className="xl:col-span-1 p-8 border-white/10 flex flex-col">
+          <SectionLabel className="mb-6 text-[#3B9EE8]">Prohibited Objects</SectionLabel>
+          <div className="flex-1 space-y-4">
+            {data.object_detections.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="size-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4 text-green-500">
+                  <Shield className="size-8" />
+                </div>
+                <p className="text-sm font-bold text-white/60">No Violations Detected</p>
+                <p className="text-xs text-white/20 mt-1">Workspace remains compliant.</p>
+              </div>
+            ) : (
+              data.object_detections.map(obj => (
+                <div key={obj.name} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-[#EF4444]/30 transition-all">
+                  <div className="size-12 rounded-lg bg-[#EF4444]/10 flex items-center justify-center text-[#EF4444]">
+                    {obj.name.toLowerCase().includes("phone") ? <Smartphone className="size-6" /> : 
+                     obj.name.toLowerCase().includes("laptop") ? <Laptop className="size-6" /> :
+                     obj.name.toLowerCase().includes("book") ? <Book className="size-6" /> : <FileText className="size-6" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-white uppercase tracking-tight">{obj.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <BrandBadge variant="red" className="text-[9px] py-0">{obj.count} DETECTIONS</BrandBadge>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
-        </Card>
+        </GlassCard>
 
-        <Card>
-          <CardHead title="Direction breakdown" icon={
-            <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-              <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-            </svg>
-          } />
-          <div className="flex flex-col gap-2 p-4">
-            {directionsBreakdown.length === 0 ? (
-              <p className="text-[13px] text-[#64748B]">No direction data</p>
-            ) : directionsBreakdown.map(([dir, count]) => {
-              const maxC = Math.max(...directionsBreakdown.map(([, v]) => v))
-              return (
-                <div key={dir} className="flex items-center gap-3">
-                  <span className="w-24 shrink-0 truncate font-mono text-[10px] text-[#94A3B8]" title={dir}>
-                    {dir}
-                  </span>
-                  <div className="relative h-4 flex-1 overflow-hidden rounded bg-[rgba(255,255,255,0.04)]">
-                    <div
-                      className="h-full rounded bg-[#3B9EE8]"
-                      style={{ width: `${(count / maxC) * 100}%`, opacity: 0.7 }}
-                    />
-                  </div>
-                  <span className="w-14 shrink-0 text-right font-mono text-[10px] text-[#64748B]">
-                    {count} ({((count / totalDir) * 100).toFixed(1)}%)
-                  </span>
-                </div>
-              )
-            })}
+        {/* Heatmap/Activity */}
+        <GlassCard className="xl:col-span-2 p-8 border-white/10">
+          <div className="flex items-center justify-between mb-8">
+            <SectionLabel className="mb-0 text-[#3B9EE8]">Subject Risk Map</SectionLabel>
+            <div className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Person ID vs Temporal Axis</div>
           </div>
-        </Card>
+          
+          <div className="space-y-3">
+             {data.persons_timeline.length === 0 ? (
+                <p className="text-white/20 text-sm italic">Insufficient temporal data for risk mapping.</p>
+             ) : (
+               [...new Set(data.persons_timeline.map(p => p.person_id))].sort((a, b) => a - b).slice(0, 8).map(pid => {
+                 const personData = data.persons_timeline.filter(p => p.person_id === pid)
+                 const totalEvents = personData.reduce((acc, curr) => acc + curr.cheating + curr.ok, 0)
+                 const riskScore = totalEvents > 0 ? (personData.reduce((acc, curr) => acc + curr.cheating, 0) / totalEvents) * 100 : 0
+                 
+                 return (
+                   <div key={pid} className="flex items-center gap-4 group">
+                     <div className="w-20 shrink-0 flex items-center gap-2">
+                        <div className={cn(
+                          "size-7 rounded-lg flex items-center justify-center text-[10px] font-bold border",
+                          riskScore > 50 ? "bg-red-500/10 border-red-500/30 text-red-500" : "bg-[#3B9EE8]/10 border-[#3B9EE8]/30 text-[#3B9EE8]"
+                        )}>
+                          {pid}
+                        </div>
+                        <span className="text-[10px] font-bold text-white/40 uppercase">ID-{pid}</span>
+                     </div>
+                     <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden flex gap-0.5 p-[1px]">
+                        {personData.map((d, i) => (
+                           <div 
+                            key={i} 
+                            className={cn(
+                              "h-full rounded-sm transition-all duration-500",
+                              d.cheating > 0 ? "bg-[#EF4444]" : d.ok > 0 ? "bg-[#10B981]/40" : "bg-transparent"
+                            )}
+                            style={{ flex: 1, opacity: d.cheating > 0 ? 0.8 + (d.cheating * 0.1) : 0.4 }}
+                           />
+                        ))}
+                     </div>
+                     <div className="w-12 text-right">
+                        <span className={cn(
+                          "text-[10px] font-bold font-mono",
+                          riskScore > 50 ? "text-red-500" : "text-white/20"
+                        )}>{riskScore.toFixed(0)}%</span>
+                     </div>
+                   </div>
+                 )
+               })
+             )}
+          </div>
+          
+          <div className="mt-8 flex items-center gap-6 text-[9px] font-mono text-white/20 uppercase tracking-[0.2em]">
+             <div className="flex items-center gap-2">
+                <div className="size-2 rounded-sm bg-[#EF4444]" />
+                <span>Cheating Detected</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <div className="size-2 rounded-sm bg-[#10B981]/40" />
+                <span>Normal Activity</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <div className="size-2 rounded-sm bg-white/5" />
+                <span>No Presence</span>
+             </div>
+          </div>
+        </GlassCard>
       </div>
-
-      {/* ── Detected objects ── */}
-      <Card>
-        <CardHead title="Detected objects" icon={
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        } />
-        <div className="p-4">
-          {data.object_detections.length === 0 ? (
-            <div className="flex items-center gap-2 text-[13px] text-[#10B981]">
-              <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" />
-              No suspicious objects detected
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {data.object_detections.map((obj) => (
-                <div
-                  key={obj.name}
-                  className="flex items-center gap-3 rounded-lg border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.05)] p-3"
-                >
-                  <div className="flex size-10 items-center justify-center rounded-lg border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.08)]">
-                    <ObjectGlyph name={obj.name} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold capitalize text-[#E2E8F0]">{obj.name}</p>
-                    <span className="inline-flex items-center rounded-full border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.1)] px-2 py-0.5 font-mono text-[9px] font-bold text-[#EF4444] mt-0.5">
-                      {obj.count} detection{obj.count !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* ── Activity per person ── */}
-      <Card>
-        <CardHead title="Activity per person" icon={
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-          </svg>
-        } />
-        <div className="flex flex-col gap-3 p-4">
-          {byPerson.length === 0 ? (
-            <p className="text-[13px] text-[#64748B]">No per-person timeline yet</p>
-          ) : byPerson.map(([pid, rows]) => {
-            const w = 320
-            const barW = rows.length ? w / rows.length : w
-            const isSuspicious = suspiciousId === pid
-            return (
-              <div
-                key={pid}
-                className={cn(
-                  "flex flex-col gap-2 rounded-lg p-2 sm:flex-row sm:items-center",
-                  isSuspicious && "border-l-2 border-[#F59E0B] bg-[rgba(245,158,11,0.04)] pl-3"
-                )}
-              >
-                <div className="flex items-center gap-2 sm:w-28 sm:shrink-0">
-                  <div className={cn(
-                    "flex size-6 items-center justify-center rounded-full border text-[10px] font-bold",
-                    isSuspicious
-                      ? "border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.12)] text-[#F59E0B]"
-                      : "border-[rgba(59,158,232,0.3)] bg-[rgba(59,158,232,0.08)] text-[#3B9EE8]"
-                  )}>
-                    {pid}
-                  </div>
-                  <p className={cn("text-[12px] font-semibold", isSuspicious ? "text-[#F59E0B]" : "text-[#94A3B8]")}>
-                    Person {pid}
-                  </p>
-                </div>
-                <svg viewBox={`0 0 ${w} 36`} className="h-9 w-full max-w-md" preserveAspectRatio="none" aria-hidden>
-                  {rows.map((r, i) => {
-                    const x = i * barW
-                    const total = r.cheating + r.ok || 1
-                    const ch = (r.cheating / total) * 32
-                    const okh = (r.ok / total) * 32
-                    return (
-                      <g key={`${pid}-${r.minute}`}>
-                        <rect x={x + 1} y={32 - ch} width={Math.max(2, barW - 2)} height={ch} fill="#EF4444" opacity={0.8}>
-                          <title>{`${r.minute}: cheating ${r.cheating}`}</title>
-                        </rect>
-                        <rect x={x + 1} y={32 - ch - okh} width={Math.max(2, barW - 2)} height={okh} fill="#10B981" opacity={0.7}>
-                          <title>{`${r.minute}: ok ${r.ok}`}</title>
-                        </rect>
-                      </g>
-                    )
-                  })}
-                </svg>
-              </div>
-            )
-          })}
-        </div>
-      </Card>
-
-      {/* ── Highest risk individual ── */}
-      {data.most_suspicious_person && (
-        <div className="rounded-xl border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.05)] p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded-lg border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.1)] text-[#F59E0B]">
-              <svg xmlns="http://www.w3.org/2000/svg" className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-            </span>
-            <h3 className="font-['Space_Grotesk',sans-serif] text-[13px] font-bold uppercase tracking-[0.06em] text-[#F59E0B]">
-              Highest Risk Individual
-            </h3>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <p className="text-[18px] font-bold text-[#E2E8F0]">
-              Person {data.most_suspicious_person.person_id}
-            </p>
-            <div className="flex flex-wrap gap-3 text-[12px]">
-              <span className="text-[#94A3B8]">
-                Incidents:{" "}
-                <strong className="font-mono text-[#EF4444] tabular-nums">
-                  {data.most_suspicious_person.cheating_events}
-                </strong>
-              </span>
-              <span className="text-[#94A3B8]">
-                Rate:{" "}
-                <strong className="font-mono text-[#EF4444] tabular-nums">
-                  {(data.most_suspicious_person.cheating_rate * 100).toFixed(1)}%
-                </strong>
-              </span>
-              <span className="inline-flex items-center rounded-full border border-[rgba(59,158,232,0.25)] bg-[rgba(59,158,232,0.08)] px-2 py-0.5 font-mono text-[10px] capitalize text-[#3B9EE8]">
-                {data.most_suspicious_person.dominant_direction}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
