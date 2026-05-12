@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from core.config import Settings
 from core.database import init_db
-from routers import events, health, sessions, stream
+from routers import analyze, events, health, model_catalog, sessions, stream
 from services.frame_broadcaster import FrameBroadcaster
 from services.session_manager import SessionManager
 
@@ -62,6 +62,8 @@ app.state.frame_broadcaster = FrameBroadcaster()
 
 app.include_router(sessions.router, prefix="/api/v1")
 app.include_router(events.router, prefix="/api/v1")
+app.include_router(model_catalog.router, prefix="/api/v1")
+app.include_router(analyze.router, prefix="/api/v1")
 app.include_router(stream.router)
 app.include_router(health.router)
 

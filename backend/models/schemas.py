@@ -11,6 +11,7 @@ class SessionCreate(BaseModel):
     title: str
     source: str = "0"
     metadata: dict[str, Any] = Field(default_factory=dict)
+    model_file: str | None = None
 
 
 class SessionResponse(BaseModel):
@@ -25,6 +26,7 @@ class SessionResponse(BaseModel):
     created_at: datetime
     output_video: str | None
     log_csv: str | None
+    model_file: str = "cnn_cheating_model.pth"
     metadata: dict[str, Any] | None = Field(
         default=None,
         validation_alias="extra_metadata",
@@ -59,6 +61,36 @@ class TimelineBucket(BaseModel):
     ok: int
 
 
+class ObjectDetectionCount(BaseModel):
+    name: str
+    count: int
+
+
+class DirectionMinuteRow(BaseModel):
+    minute: str
+    direction: str
+    count: int
+
+
+class ConfidenceBucket(BaseModel):
+    rng: str = Field(serialization_alias="range")
+    count: int
+
+
+class PersonTimelineRow(BaseModel):
+    person_id: int
+    minute: str
+    cheating: int
+    ok: int
+
+
+class MostSuspiciousPerson(BaseModel):
+    person_id: int
+    cheating_events: int
+    cheating_rate: float
+    dominant_direction: str
+
+
 class EventSummary(BaseModel):
     session_id: uuid.UUID
     total_events: int
@@ -69,6 +101,13 @@ class EventSummary(BaseModel):
     events_by_direction: dict[str, int]
     events_by_person: dict[str, dict[str, int]]
     timeline: list[TimelineBucket]
+    risk_score: float = 0.0
+    peak_cheating_minute: str | None = None
+    most_suspicious_person: MostSuspiciousPerson | None = None
+    object_detections: list[ObjectDetectionCount] = Field(default_factory=list)
+    direction_over_time: list[DirectionMinuteRow] = Field(default_factory=list)
+    confidence_distribution: list[ConfidenceBucket] = Field(default_factory=list)
+    persons_timeline: list[PersonTimelineRow] = Field(default_factory=list)
 
 
 class PersonFrame(BaseModel):
@@ -96,3 +135,40 @@ class FramePayload(BaseModel):
     frame_b64: str
     persons: list[PersonFrame]
     summary: FrameSummary
+
+
+class ModelFileInfo(BaseModel):
+    filename: str
+    path: str
+    size_mb: float
+
+
+class ModelsListResponse(BaseModel):
+    models: list[ModelFileInfo]
+
+
+class PersonImageResult(BaseModel):
+    person_index: int
+    verdict: str
+    cheat_prob: float
+    direction: str
+    obj_nearby: bool
+    obj_name: str
+    reasons: list[str]
+    bbox: list[int]
+
+
+class ImageSummary(BaseModel):
+    total_persons: int
+    cheating_count: int
+    ok_count: int
+    suspicious_objects: list[str]
+
+
+class ImageAnalysisResult(BaseModel):
+    model_used: str
+    image_width: int
+    image_height: int
+    annotated_image_b64: str
+    persons: list[PersonImageResult]
+    summary: ImageSummary

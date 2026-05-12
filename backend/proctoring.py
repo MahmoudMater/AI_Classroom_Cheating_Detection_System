@@ -7,6 +7,7 @@ import csv
 import time
 from collections import defaultdict, deque
 from datetime import datetime
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -15,10 +16,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
 from torchvision import transforms
+from torchvision.models import efficientnet_b0, mobilenet_v2, resnet18, vit_b_16
 from ultralytics import YOLO
 
 # ── CONFIG — Edit these paths ────────────────────────────────────────
-DRIVE_MODELS = r"C:\Users\Mariam\saved_models"  # ← CHANGE THIS
+# Default: backend/ai-models (same folder as this file)
+DRIVE_MODELS = str(Path(__file__).resolve().parent / "ai-models")
 BEST_MODEL_FILE = "cnn_cheating_model.pth"
 
 SOURCE = 0  # 0 = default webcam | use "path/to/video.mp4" for a file
@@ -93,9 +96,113 @@ class CustomCNN(nn.Module):
         return self.classifier(self.pool(self.features(x)))
 
 
+# ── Multi-architecture loaders (match notebooks 03 / 04) ─────────────
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD = [0.229, 0.224, 0.225]
+CUSTOM_MEAN = [0.5, 0.5, 0.5]
+CUSTOM_STD = [0.5, 0.5, 0.5]
+
+
+def _strip_dataparallel_prefix(state_dict: dict) -> dict:
+    if not state_dict or not any(str(k).startswith("module.") for k in state_dict):
+        return state_dict
+    return {k[7:] if str(k).startswith("module.") else k: v for k, v in state_dict.items()}
+
+
+def _unwrap_checkpoint(raw: object) -> dict:
+    if not isinstance(raw, dict):
+        raise TypeError(f"Expected dict checkpoint, got {type(raw).__name__}")
+    for key in ("state_dict", "model_state_dict", "model", "net"):
+        inner = raw.get(key)
+        if isinstance(inner, dict) and inner:
+            fst = next(iter(inner.values()))
+            if torch.is_tensor(fst):
+                return inner
+    if raw:
+        fst = next(iter(raw.values()))
+        if torch.is_tensor(fst):
+            return raw
+    raise ValueError("Checkpoint dict did not contain a tensor state_dict")
+
+
+def _infer_classifier_kind(state_dict: dict) -> str:
+    """Match saved .pth to the architecture used in notebook 04 (Model Comparison)."""
+    keys = set(state_dict.keys())
+    if "class_token" in keys or any(
+        isinstance(k, str) and k.startswith("encoder.layers.encoder_layer_") for k in keys
+    ):
+        return "vit"
+    if any(isinstance(k, str) and k.startswith("layer4.") for k in keys):
+        return "resnet18"
+    if any(isinstance(k, str) and ".block." in k for k in keys):
+        return "efficientnet"
+    if "classifier.4.weight" in keys:
+        return "mobilenet"
+    if "classifier.5.weight" in keys:
+        return "cnn"
+    if "fc.3.weight" in keys or "fc.0.weight" in keys:
+        return "resnet18"
+    return "cnn"
+
+
+def _build_classifier(kind: str, device_: torch.device) -> nn.Module:
+    if kind == "cnn":
+        return CustomCNN().to(device_)
+    if kind == "resnet18":
+        m = resnet18(weights=None)
+        m.fc = nn.Sequential(
+            nn.Linear(m.fc.in_features, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
+            nn.Linear(128, 2),
+        )
+        return m.to(device_)
+    if kind == "efficientnet":
+        m = efficientnet_b0(weights=None)
+        in_f = m.classifier[1].in_features
+        m.classifier = nn.Sequential(
+            nn.Linear(in_f, 256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.4),
+            nn.Linear(256, 2),
+        )
+        return m.to(device_)
+    if kind == "vit":
+        m = vit_b_16(weights=None)
+        in_f = m.heads.head.in_features
+        m.heads = nn.Sequential(
+            nn.Linear(in_f, 256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.4),
+            nn.Linear(256, 2),
+        )
+        return m.to(device_)
+    if kind == "mobilenet":
+        m = mobilenet_v2(weights=None)
+        in_f = m.classifier[1].in_features
+        m.classifier = nn.Sequential(
+            nn.Dropout(0.3),
+            nn.Linear(in_f, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.3),
+            nn.Linear(128, 2),
+        )
+        return m.to(device_)
+    raise ValueError(f"Unknown classifier kind: {kind}")
+
+
+_KIND_LABELS = {
+    "cnn": "Custom CNN",
+    "resnet18": "ResNet18",
+    "efficientnet": "EfficientNet-B0",
+    "vit": "ViT-B/16",
+    "mobilenet": "MobileNetV2",
+}
+
+
 def load_models(model_dir: str, best_model_file: str) -> None:
-    """Load CNN + YOLO weights into module globals. Safe to call once per process/worker."""
-    global device, clf, CLF_TRANSFORM, yolo, pose_yolo
+    """Load classifier + YOLO weights into module globals. Safe to call once per process/worker."""
+    global device, clf, CLF_TRANSFORM, yolo, pose_yolo, CLF_MEAN, CLF_STD, BEST_MODEL_NAME
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
@@ -106,14 +213,24 @@ def load_models(model_dir: str, best_model_file: str) -> None:
             f"❌  Model not found: {model_path}\n   Download cnn_cheating_model.pth from your Google Drive."
         )
 
-    clf = CustomCNN().to(device)
     try:
-        state = torch.load(model_path, map_location=device, weights_only=True)
+        raw = torch.load(model_path, map_location=device, weights_only=True)
     except TypeError:
-        state = torch.load(model_path, map_location=device)
-    clf.load_state_dict(state)
+        raw = torch.load(model_path, map_location=device)
+
+    state = _strip_dataparallel_prefix(_unwrap_checkpoint(raw))
+    kind = _infer_classifier_kind(state)
+    clf = _build_classifier(kind, device)
+    clf.load_state_dict(state, strict=True)
     clf.eval()
-    print(f"✅  Classifier loaded: {model_path}")
+
+    BEST_MODEL_NAME = _KIND_LABELS.get(kind, kind)
+    if kind == "cnn":
+        CLF_MEAN, CLF_STD = CUSTOM_MEAN, CUSTOM_STD
+    else:
+        CLF_MEAN, CLF_STD = IMAGENET_MEAN, IMAGENET_STD
+
+    print(f"✅  Classifier loaded ({BEST_MODEL_NAME}): {model_path}")
 
     CLF_TRANSFORM = transforms.Compose(
         [

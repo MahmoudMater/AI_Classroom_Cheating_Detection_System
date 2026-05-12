@@ -31,7 +31,7 @@ class ProctoringService:
         session_id: uuid.UUID,
         source: str,
         model_dir: str,
-        best_model_file: str,
+        model_file: str,
         log_csv_path: str,
         output_video_path: str,
         frame_broadcaster: FrameBroadcaster,
@@ -39,15 +39,20 @@ class ProctoringService:
     ) -> None:
         self.session_id = session_id
         self._source = source
+        self._model_file = model_file
         self._log_csv_path = log_csv_path
         self._output_video_path = output_video_path
         self._frame_broadcaster = frame_broadcaster
         self._jpeg_quality = jpeg_quality
 
-        _p.load_models(model_dir, best_model_file)
+        _p.load_models(model_dir, model_file)
 
         self._thread: threading.Thread | None = None
         self._stop_event = threading.Event()
+
+    def set_source(self, source: str) -> None:
+        """Update capture source before the next ``start()`` (e.g. after upload)."""
+        self._source = source
 
     @property
     def is_running(self) -> bool:

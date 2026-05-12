@@ -25,6 +25,9 @@ class ExamSession(Base):
     )
     output_video: Mapped[str | None] = mapped_column(String(512), nullable=True)
     log_csv: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    model_file: Mapped[str] = mapped_column(
+        String(255), nullable=False, server_default="cnn_cheating_model.pth"
+    )
     extra_metadata: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
 
     events: Mapped[list["ProctoringEvent"]] = relationship(
