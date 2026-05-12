@@ -23,7 +23,8 @@ export function Header() {
   const navLinks = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Analysis", href: "/analyze", icon: Search },
-    { name: "Docs", href: "/docs", icon: ScrollText }
+    { name: "Docs", href: "/docs", icon: ScrollText },
+    { name: "Docs2", href: "/docs2", icon: ScrollText }
   ]
 
   if(pathname.includes("docs")) {
