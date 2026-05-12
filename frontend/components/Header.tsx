@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Scan, LayoutDashboard, Search, Activity, ArrowRight, Shield, Menu, X } from "lucide-react"
+import { Scan, LayoutDashboard, Search, Activity, ArrowRight, Shield, Menu, X, ScrollText } from "lucide-react"
 import { GlassCard, PremiumButton, BrandBadge, LiveDot } from "@/components/brand-ui"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
@@ -23,7 +23,12 @@ export function Header() {
   const navLinks = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Analysis", href: "/analyze", icon: Search },
+    { name: "Docs", href: "/docs", icon: ScrollText }
   ]
+
+  if(pathname.includes("docs")) {
+    return null
+  }
 
   return (
     <>
