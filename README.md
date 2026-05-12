@@ -50,7 +50,7 @@ graph TB
     subgraph FRONTEND["🖥️ Frontend — Next.js + Tailwind"]
         F1[Landing Page<br/>app/page.tsx]
         F2[Dashboard<br/>app/dashboard/page.tsx]
-        F3[Session View<br/>app/sessions/[id]/page.tsx]
+        F3["Session View<br/>app/sessions/[id]/page.tsx"]
         F4[Image Analyze<br/>app/analyze/page.tsx]
         F5[LiveFeed Canvas<br/>WebSocket frames]
         F6[EventLog + Charts<br/>REST polling]
