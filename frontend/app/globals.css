@@ -6,6 +6,8 @@
 @custom-variant dark (&:is(.dark *));
  
 :root {
+  /* Reserved height for fixed site header (nav padding + inner bar); keep in sync with Header */
+  --site-header-height: 5.625rem;
   --brand-navy: #0A0F1A;
   --brand-dark: #111827;
   --brand-card: #151C2C;

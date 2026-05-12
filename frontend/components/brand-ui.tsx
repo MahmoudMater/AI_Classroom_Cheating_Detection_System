@@ -14,16 +14,16 @@ export function BrandBadge({
   children: React.ReactNode
 }) {
   const styles: Record<BadgeVariant, string> = {
-    blue:  "bg-[rgba(59,158,232,0.12)] text-[#3B9EE8] border border-[rgba(59,158,232,0.25)]",
-    green: "bg-[rgba(16,185,129,0.08)] text-[#10B981] border border-[rgba(16,185,129,0.25)]",
-    red:   "bg-[rgba(239,68,68,0.08)]  text-[#EF4444] border border-[rgba(239,68,68,0.25)]",
-    amber: "bg-[rgba(245,158,11,0.10)] text-[#F59E0B] border border-[rgba(245,158,11,0.25)]",
-    muted: "bg-[rgba(100,116,139,0.1)] text-[#64748B] border border-[rgba(100,116,139,0.2)]",
+    blue:  "bg-blue-500/10 dark:bg-[rgba(59,158,232,0.12)] text-blue-600 dark:text-[#3B9EE8] border border-blue-500/20 dark:border-[rgba(59,158,232,0.25)]",
+    green: "bg-emerald-500/10 dark:bg-[rgba(16,185,129,0.08)] text-emerald-600 dark:text-[#10B981] border border-emerald-500/20 dark:border-[rgba(16,185,129,0.25)]",
+    red:   "bg-rose-500/10 dark:bg-[rgba(239,68,68,0.08)]  text-rose-600 dark:text-[#EF4444] border border-rose-500/20 dark:border-[rgba(239,68,68,0.25)]",
+    amber: "bg-amber-500/10 dark:bg-[rgba(245,158,11,0.10)] text-amber-600 dark:text-[#F59E0B] border border-amber-500/20 dark:border-[rgba(245,158,11,0.25)]",
+    muted: "bg-slate-500/10 dark:bg-[rgba(100,116,139,0.1)] text-slate-600 dark:text-[#64748B] border border-slate-500/20 dark:border-[rgba(100,116,139,0.2)]",
   }
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wide transition-colors",
         styles[variant],
         className
       )}
@@ -39,7 +39,7 @@ export function LiveDot({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-block size-1.5 rounded-full bg-[#10B981] animate-pulse",
+        "inline-block size-1.5 rounded-full bg-emerald-500 dark:bg-[#10B981] animate-pulse transition-colors",
         className
       )}
     />
@@ -50,8 +50,8 @@ export function LiveDot({ className }: { className?: string }) {
 
 export function SectionLabel({ children, className }: { children: React.ReactNode, className?: string }) {
   return (
-    <p className={cn("flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#3B9EE8] mb-1", className)}>
-      <span className="inline-block h-px w-4 bg-[#3B9EE8]" />
+    <p className={cn("flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-blue-600 dark:text-[#3B9EE8] mb-1 transition-colors", className)}>
+      <span className="inline-block h-px w-4 bg-blue-500 dark:bg-[#3B9EE8] transition-colors" />
       {children}
     </p>
   )
@@ -79,14 +79,14 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-white/5 bg-[#0D121F]/80 backdrop-blur-xl transition-all duration-300",
+        "relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-white/90 dark:bg-[#0D121F]/80 backdrop-blur-xl transition-all duration-300 shadow-sm dark:shadow-none",
         accent !== "none" && "before:absolute before:inset-x-0 before:top-0 before:h-px before:content-['']",
         accents[accent],
         className
       )}
     >
       {/* Background glow */}
-      <div className="absolute -right-20 -top-20 size-40 bg-[#3B9EE8]/5 blur-[80px]" />
+      <div className="absolute -right-20 -top-20 size-40 bg-blue-500/5 dark:bg-[#3B9EE8]/5 blur-[80px] pointer-events-none" />
       <div className="relative z-10">{children}</div>
     </div>
   )
@@ -106,9 +106,9 @@ export function PremiumButton({
 }) {
   const variants = {
     primary: "bg-[#3B9EE8] text-white hover:bg-[#3B9EE8]/90 shadow-[0_0_20px_rgba(59,158,232,0.3)]",
-    secondary: "bg-white/10 text-white hover:bg-white/20",
-    outline: "border border-white/10 text-white hover:bg-white/5",
-    ghost: "text-[#94A3B8] hover:text-white hover:bg-white/5",
+    secondary: "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-white/20 transition-colors",
+    outline: "border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors",
+    ghost: "text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors",
   }
 
   const sizes = {
@@ -169,13 +169,13 @@ export function PageHeader({
   actions?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 transition-all">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl transition-colors">
           {title}
         </h1>
         {description && (
-          <p className="text-sm text-[#94A3B8]">
+          <p className="text-sm text-slate-500 dark:text-[#94A3B8] transition-colors">
             {description}
           </p>
         )}

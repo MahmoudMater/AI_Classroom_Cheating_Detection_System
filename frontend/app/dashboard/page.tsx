@@ -46,14 +46,14 @@ export default function Page() {
   const actions = (
     <div className="flex flex-wrap items-center gap-3">
       <Link href="/analyze">
-        <PremiumButton variant="secondary" size="sm" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
+        <PremiumButton variant="secondary" size="sm" className="transition-all">
           <ImageIcon className="size-4" />
           <span className="hidden sm:inline">Analyze</span>
           <span className="sm:hidden">Image</span>
         </PremiumButton>
       </Link>
       
-      <PremiumButton onClick={() => setCreateOpen(true)} size="sm" className="bg-gradient-to-r from-[#3B9EE8] to-[#2B7FC8] shadow-lg shadow-[#3B9EE8]/20">
+      <PremiumButton onClick={() => setCreateOpen(true)} size="sm" className="bg-gradient-to-r from-[#3B9EE8] to-[#2B7FC8] shadow-lg shadow-blue-500/20 dark:shadow-[#3B9EE8]/20">
         <Plus className="size-4" />
         <span className="hidden sm:inline">New Session</span>
         <span className="sm:hidden">New</span>
@@ -62,18 +62,18 @@ export default function Page() {
   )
 
   return (
-    <main className="relative min-h-screen bg-gradient-to-br from-[#070B14] via-[#0A0F1A] to-[#070B14]">
+    <main className="relative min-h-screen bg-white dark:bg-gradient-to-br dark:from-[#070B14] dark:via-[#0A0F1A] dark:to-[#070B14] transition-colors duration-300">
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-[#3B9EE8]/10 blur-[100px]" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-[#3B9EE8]/5 blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#3B9EE8]/[0.02] blur-[120px]" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-blue-500/10 dark:bg-[#3B9EE8]/10 blur-[100px]" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-blue-500/5 dark:bg-[#3B9EE8]/5 blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-blue-500/[0.02] dark:bg-[#3B9EE8]/[0.02] blur-[120px]" />
         
         {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,158,232,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,158,232,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,158,232,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,158,232,0.03)_1px,transparent_1px)] bg-[size:40px_40px] dark:opacity-100 opacity-50" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-8 lg:py-10">
+      <div className="relative z-10 mx-auto w-full max-w-11/12 px-4 sm:px-6 py-6 sm:py-8 lg:py-10">
         
         {/* Header Section */}
         <div className="mb-8 space-y-6">
@@ -84,10 +84,10 @@ export default function Page() {
                   <Shield className="size-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight transition-colors">
                     Proctoring Dashboard
                   </h1>
-                  <p className="text-sm text-white/40 mt-1">
+                  <p className="text-sm text-slate-500 dark:text-white/40 mt-1 transition-colors">
                     Monitor exam sessions, live video, and integrity events in real-time
                   </p>
                 </div>
@@ -99,63 +99,61 @@ export default function Page() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
+            <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 backdrop-blur-sm transition-all shadow-sm dark:shadow-none">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-white/40 uppercase tracking-wider">Total Sessions</span>
-                <div className="size-8 rounded-lg bg-[#3B9EE8]/10 flex items-center justify-center">
-                  <Activity className="size-4 text-[#3B9EE8]" />
+                <span className="text-xs font-medium text-slate-400 dark:text-white/40 uppercase tracking-wider transition-colors">Total Sessions</span>
+                <div className="size-8 rounded-lg bg-blue-500/10 dark:bg-[#3B9EE8]/10 flex items-center justify-center transition-colors">
+                  <Activity className="size-4 text-blue-600 dark:text-[#3B9EE8]" />
                 </div>
               </div>
-              <div className="text-2xl font-bold text-white">{totalSessions}</div>
-              <div className="text-xs text-white/30 mt-1">Created sessions</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">{totalSessions}</div>
+              <div className="text-xs text-slate-400 dark:text-white/30 mt-1 transition-colors">Created sessions</div>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
+            <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 backdrop-blur-sm transition-all shadow-sm dark:shadow-none">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-white/40 uppercase tracking-wider">Active Now</span>
+                <span className="text-xs font-medium text-slate-400 dark:text-white/40 uppercase tracking-wider transition-colors">Active Now</span>
                 <LiveDot />
               </div>
-              <div className="text-2xl font-bold text-white">{activeSessions}</div>
-              <div className="text-xs text-white/30 mt-1">Currently running</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">{activeSessions}</div>
+              <div className="text-xs text-slate-400 dark:text-white/30 mt-1 transition-colors">Currently running</div>
             </div>
-
-           
           </div>
 
           {/* System Status Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-white/10 transition-colors">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <Server className="size-3.5 text-white/30" />
+                <Server className="size-3.5 text-slate-400 dark:text-white/30 transition-colors" />
                 <div className="flex items-center gap-2">
                   <div className={cn(
                     "size-1.5 rounded-full transition-all duration-500",
-                    healthOk === null && "bg-zinc-400 animate-pulse",
-                    healthOk === true && "bg-green-500 shadow-lg shadow-green-500/50",
-                    healthOk === false && "bg-red-500"
+                    healthOk === null && "bg-slate-300 dark:bg-zinc-400 animate-pulse",
+                    healthOk === true && "bg-emerald-500 shadow-lg shadow-emerald-500/50 dark:bg-green-500 dark:shadow-green-500/50",
+                    healthOk === false && "bg-rose-500"
                   )} />
-                  <span className="text-xs font-mono text-white/60">API</span>
+                  <span className="text-xs font-mono text-slate-500 dark:text-white/60 transition-colors">API</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={cn(
                     "size-1.5 rounded-full transition-all duration-500",
-                    dbOk === null && "bg-zinc-400 animate-pulse",
-                    dbOk === true && "bg-green-500 shadow-lg shadow-green-500/50",
-                    dbOk === false && "bg-red-500"
+                    dbOk === null && "bg-slate-300 dark:bg-zinc-400 animate-pulse",
+                    dbOk === true && "bg-emerald-500 shadow-lg shadow-emerald-500/50 dark:bg-green-500 dark:shadow-green-500/50",
+                    dbOk === false && "bg-rose-500"
                   )} />
-                  <span className="text-xs font-mono text-white/60">Database</span>
+                  <span className="text-xs font-mono text-slate-500 dark:text-white/60 transition-colors">Database</span>
                 </div>
               </div>
-              <div className="text-xs text-white/40 flex items-center gap-1">
+              <div className="text-xs text-slate-400 dark:text-white/40 flex items-center gap-1 transition-colors">
                 <Clock className="size-3" />
                 Auto-refresh every 30s
               </div>
             </div>
             
             {anyRunning && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-                <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-green-500/10 border border-emerald-500/20 dark:border-green-500/20 transition-colors">
+                <div className="size-1.5 rounded-full bg-emerald-500 dark:bg-green-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-green-400 uppercase tracking-wider">
                   Live monitoring active
                 </span>
               </div>
@@ -170,7 +168,7 @@ export default function Page() {
               {totalSessions > 0 ? "Active & Recent Sessions" : "Sessions"}
             </SectionLabel>
             {totalSessions > 0 && (
-              <button className="text-xs text-white/40 hover:text-white/60 transition-colors">
+              <button className="text-xs text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60 transition-colors">
                 View All <ChevronRight className="size-3 inline ml-0.5" />
               </button>
             )}
@@ -179,26 +177,26 @@ export default function Page() {
           {loading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="relative overflow-hidden rounded-xl bg-white/5 border border-white/10 animate-pulse">
-                  <div className="h-32 bg-white/10" />
+                <div key={i} className="relative overflow-hidden rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 animate-pulse">
+                  <div className="h-32 bg-slate-200 dark:bg-white/10" />
                   <div className="p-4 space-y-3">
-                    <div className="h-4 bg-white/10 rounded w-3/4" />
-                    <div className="h-3 bg-white/10 rounded w-1/2" />
+                    <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-3/4" />
+                    <div className="h-3 bg-slate-200 dark:bg-white/10 rounded w-1/2" />
                     <div className="flex gap-2">
-                      <div className="h-6 bg-white/10 rounded w-16" />
-                      <div className="h-6 bg-white/10 rounded w-16" />
+                      <div className="h-6 bg-slate-200 dark:bg-white/10 rounded w-16" />
+                      <div className="h-6 bg-slate-200 dark:bg-white/10 rounded w-16" />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : sessions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] backdrop-blur-sm">
-              <div className="size-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
-                <Activity className="size-10 text-white/20" />
+            <div className="flex flex-col items-center justify-center py-16 px-4 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] backdrop-blur-sm transition-colors">
+              <div className="size-20 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-6 transition-colors">
+                <Activity className="size-10 text-slate-300 dark:text-white/20" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">No sessions yet</h3>
-              <p className="text-[#94A3B8] text-center max-w-md mb-8 text-sm">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 transition-colors">No sessions yet</h3>
+              <p className="text-slate-500 dark:text-[#94A3B8] text-center max-w-md mb-8 text-sm transition-colors">
                 Get started by creating your first proctoring session. Sessions will appear here with live status and integrity event tracking.
               </p>
               <PremiumButton onClick={() => setCreateOpen(true)} size="lg" className="bg-gradient-to-r from-[#3B9EE8] to-[#2B7FC8]">
@@ -216,7 +214,7 @@ export default function Page() {
               
               {sessions.length > 9 && (
                 <div className="flex justify-center pt-6">
-                  <button className="px-6 py-2 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all text-sm">
+                  <button className="px-6 py-2 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-sm">
                     Load More Sessions
                   </button>
                 </div>

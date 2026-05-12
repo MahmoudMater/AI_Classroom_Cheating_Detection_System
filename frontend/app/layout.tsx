@@ -50,13 +50,13 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
         />
       </head>
-      <body className="bg-[#070B14] min-h-screen text-white selection:bg-[#3B9EE8]/30 selection:text-[#3B9EE8]">
+      <body className="bg-background text-foreground dark:bg-[#070B14] dark:text-white min-h-screen selection:bg-[#3B9EE8]/30 selection:text-[#3B9EE8] transition-colors duration-300">
         <ThemeProvider>
-          <Header />
-          <main >
-            {children}
-          </main>
-          <Toaster />
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <div className="flex min-h-0 flex-1 flex-col w-full">{children}</div>
+            <Toaster />
+          </div>
         </ThemeProvider>
       </body>
     </html>

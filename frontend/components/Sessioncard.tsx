@@ -63,12 +63,12 @@ export function SessionCard({ session }: SessionCardProps) {
     <Link href={`/sessions/${session.id}`} className="group block h-full">
       <GlassCard
         accent={accent}
-        className="h-full border-white/5 transition-all duration-300 group-hover:border-[#3B9EE8]/30 group-hover:bg-[#151C2C]/90 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+        className="h-full border-slate-200 dark:border-white/5 transition-all duration-300 group-hover:border-blue-500/50 dark:group-hover:border-[#3B9EE8]/30 group-hover:bg-slate-50 dark:group-hover:bg-[#151C2C]/90 group-hover:shadow-xl dark:group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
       >
         <div className="p-6 flex flex-col h-full">
           {/* Title row */}
           <div className="mb-4 flex items-start justify-between gap-3">
-            <h3 className="line-clamp-2 text-lg font-bold leading-tight text-white group-hover:text-[#3B9EE8] transition-colors">
+            <h3 className="line-clamp-2 text-lg font-bold leading-tight text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-[#3B9EE8] transition-colors">
               {session.title}
             </h3>
             <div className="shrink-0 pt-1">{badge}</div>
@@ -76,7 +76,7 @@ export function SessionCard({ session }: SessionCardProps) {
 
           {/* Metadata */}
           <div className="mb-6 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-[#94A3B8]">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-[#94A3B8] transition-colors">
               <Calendar className="size-3.5" />
               <span className="font-mono text-[10px] uppercase tracking-wider">
                 {session.started_at
@@ -85,9 +85,9 @@ export function SessionCard({ session }: SessionCardProps) {
               </span>
             </div>
             {session.source !== "0" && (
-              <div className="flex items-center gap-2 text-[#94A3B8]">
+              <div className="flex items-center gap-2 text-slate-500 dark:text-[#94A3B8] transition-colors">
                 <div className="size-3.5 flex items-center justify-center">
-                  <div className="size-1 rounded-full bg-white/20" />
+                  <div className="size-1 rounded-full bg-slate-400 dark:bg-white/20" />
                 </div>
                 <span className="font-mono text-[10px] truncate max-w-[200px]">
                   {session.source}
@@ -98,21 +98,21 @@ export function SessionCard({ session }: SessionCardProps) {
 
           <div className="mt-auto">
             {/* Divider */}
-            <div className="mb-4 h-px bg-white/5" />
+            <div className="mb-4 h-px bg-slate-100 dark:bg-white/5 transition-colors" />
 
             {/* Stats row */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="mb-1 flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">
+                <span className="mb-1 flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-white/30 transition-colors">
                   <AlertCircle className="size-2.5" />
                   Incidents
                 </span>
                 <p
                   className={cn(
-                    "font-mono text-3xl font-bold tabular-nums leading-none",
+                    "font-mono text-3xl font-bold tabular-nums leading-none transition-all",
                     cheatingCount !== null && cheatingCount > 0
-                      ? "text-[#EF4444] drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]"
-                      : "text-white/80"
+                      ? "text-rose-600 dark:text-[#EF4444] drop-shadow-[0_0_8px_rgba(239,68,68,0.2)] dark:drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]"
+                      : "text-slate-900 dark:text-white/80"
                   )}
                 >
                   {cheatingCount ?? 0}
@@ -120,7 +120,7 @@ export function SessionCard({ session }: SessionCardProps) {
               </div>
 
               {/* View Details hint */}
-              <div className="flex size-10 items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[#3B9EE8] transition-all duration-300 group-hover:bg-[#3B9EE8] group-hover:text-white group-hover:border-[#3B9EE8]">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-blue-600 dark:text-[#3B9EE8] transition-all duration-300 group-hover:bg-blue-600 dark:group-hover:bg-[#3B9EE8] group-hover:text-white group-hover:border-blue-600 dark:group-hover:border-[#3B9EE8]">
                 <ArrowRight className="size-5 transition-transform duration-300 group-hover:translate-x-0.5" />
               </div>
             </div>

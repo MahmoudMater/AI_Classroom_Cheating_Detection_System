@@ -118,14 +118,14 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
-          <Label>Verdict</Label>
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Verdict</Label>
           <Select
             value={draft.verdict}
             onValueChange={(v) =>
               setDraft((d) => ({ ...d, verdict: v }))
             }
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 transition-colors">
               <SelectValue placeholder="Verdict" />
             </SelectTrigger>
             <SelectContent>
@@ -136,7 +136,7 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="person-filter">Person ID</Label>
+          <Label htmlFor="person-filter" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Person ID</Label>
           <Input
             id="person-filter"
             inputMode="numeric"
@@ -145,10 +145,11 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
             onChange={(e) =>
               setDraft((d) => ({ ...d, personId: e.target.value }))
             }
+            className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 transition-colors"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="from-ts">From</Label>
+          <Label htmlFor="from-ts" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">From</Label>
           <Input
             id="from-ts"
             type="datetime-local"
@@ -156,10 +157,11 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
             onChange={(e) =>
               setDraft((d) => ({ ...d, fromTs: e.target.value }))
             }
+            className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 transition-colors"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="to-ts">To</Label>
+          <Label htmlFor="to-ts" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">To</Label>
           <Input
             id="to-ts"
             type="datetime-local"
@@ -167,29 +169,40 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
             onChange={(e) =>
               setDraft((d) => ({ ...d, toTs: e.target.value }))
             }
+            className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 transition-colors"
           />
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={applyFilters} disabled={loading}>
+        <Button 
+          type="button" 
+          onClick={applyFilters} 
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 dark:bg-[#3B9EE8] dark:hover:bg-[#2B7FC8] text-white transition-colors"
+        >
           Apply filters
         </Button>
-        <Button type="button" variant="outline" onClick={exportCsv}>
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={exportCsv}
+          className="border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+        >
           Export CSV
         </Button>
       </div>
 
-      <div className="max-h-[min(60vh,520px)] overflow-auto rounded-lg border border-border">
+      <div className="max-h-[min(60vh,520px)] overflow-auto rounded-lg border border-slate-200 dark:border-white/10 transition-colors">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Time</TableHead>
-              <TableHead>Person</TableHead>
-              <TableHead>Verdict</TableHead>
-              <TableHead>Cheat %</TableHead>
-              <TableHead>Direction</TableHead>
-              <TableHead>Object</TableHead>
-              <TableHead className="min-w-[180px]">Reasons</TableHead>
+            <TableRow className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10">
+              <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Time</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Person</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Verdict</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Cheat %</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Direction</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Object</TableHead>
+              <TableHead className="min-w-[180px] text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">Reasons</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,7 +210,7 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="text-muted-foreground py-8 text-center"
+                  className="text-slate-400 dark:text-white/30 py-8 text-center transition-colors"
                 >
                   No events match the current filters.
                 </TableCell>
@@ -207,14 +220,16 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
                 <TableRow
                   key={ev.id}
                   className={cn(
-                    ev.verdict === "CHEATING" &&
-                      "bg-red-50 dark:bg-red-950/30"
+                    "transition-colors",
+                    ev.verdict === "CHEATING" 
+                      ? "bg-rose-50 dark:bg-red-950/30 border-rose-100 dark:border-red-900/30" 
+                      : "border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/[0.03]"
                   )}
                 >
-                  <TableCell className="whitespace-nowrap text-xs">
+                  <TableCell className="whitespace-nowrap text-xs font-mono text-slate-500 dark:text-white/60">
                     {new Date(ev.occurred_at).toLocaleString()}
                   </TableCell>
-                  <TableCell>{ev.person_id}</TableCell>
+                  <TableCell className="font-bold text-slate-900 dark:text-white">{ev.person_id}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -222,23 +237,26 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
                           ? "destructive"
                           : "secondary"
                       }
-                      className={
+                      className={cn(
+                        "text-[10px] font-bold tracking-widest",
                         ev.verdict === "OK"
-                          ? "bg-green-600 text-white hover:bg-green-600/90 dark:bg-green-700"
+                          ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-green-700"
                           : ""
-                      }
+                      )}
                     >
                       {ev.verdict}
                     </Badge>
                   </TableCell>
-                  <TableCell>{(ev.cheat_prob * 100).toFixed(1)}%</TableCell>
-                  <TableCell className="max-w-[120px] truncate">
+                  <TableCell className="font-mono text-xs tabular-nums text-slate-900 dark:text-white">
+                    {(ev.cheat_prob * 100).toFixed(1)}%
+                  </TableCell>
+                  <TableCell className="max-w-[120px] truncate text-xs uppercase tracking-tight text-slate-600 dark:text-white/60">
                     {ev.direction}
                   </TableCell>
-                  <TableCell className="text-xs">
+                  <TableCell className="text-[10px] font-bold uppercase text-slate-500 dark:text-white/40">
                     {ev.obj_nearby ? ev.obj_name || "yes" : "—"}
                   </TableCell>
-                  <TableCell className="text-muted-foreground max-w-xs whitespace-normal text-xs">
+                  <TableCell className="max-w-xs whitespace-normal text-[10px] text-slate-400 dark:text-white/30 leading-relaxed">
                     {ev.reasons?.length ? ev.reasons.join(" · ") : "—"}
                   </TableCell>
                 </TableRow>
@@ -254,6 +272,7 @@ export function EventLog({ sessionId, liveEvents = [] }: EventLogProps) {
           variant="secondary"
           disabled={loading}
           onClick={loadMore}
+          className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white transition-colors"
         >
           Load more
         </Button>

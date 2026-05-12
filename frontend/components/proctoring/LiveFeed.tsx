@@ -119,25 +119,44 @@ export function LiveFeed({
     <div
       ref={containerRef}
       className={cn(
-        "bg-muted relative w-full overflow-hidden rounded-xl ring-1 ring-border",
+        "relative w-full overflow-hidden rounded-xl border transition-all duration-300 shadow-lg dark:shadow-none",
+        "bg-slate-900 border-slate-200 dark:border-white/10",
         className
       )}
     >
       {!frame ? (
-        <div className="text-muted-foreground flex aspect-video w-full flex-col items-center justify-center gap-2 py-16">
-          <HugeiconsIcon
-            icon={Camera01Icon}
-            strokeWidth={1.5}
-            className="size-12 opacity-60"
-          />
-          <p className="text-sm">Waiting for video frames…</p>
+        <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 py-20 bg-slate-100 dark:bg-black/20 transition-colors">
+          <div className="size-16 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-sm transition-colors">
+            <HugeiconsIcon
+              icon={Camera01Icon}
+              strokeWidth={1.5}
+              className="size-8 text-slate-400 dark:text-white/20 animate-pulse"
+            />
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-bold text-slate-600 dark:text-white/40 uppercase tracking-widest transition-colors">Awaiting Signal</p>
+            <p className="text-xs text-slate-400 dark:text-white/20 transition-colors">Initializing secure video link...</p>
+          </div>
         </div>
       ) : null}
       <canvas
         ref={canvasRef}
-        className={cn("block w-full", frame ? "aspect-video max-h-[min(70vh,720px)]" : "hidden")}
+        className={cn(
+          "block w-full transition-opacity duration-500", 
+          frame ? "aspect-video max-h-[min(70vh,720px)] opacity-100" : "hidden opacity-0"
+        )}
         aria-label="Live proctoring video"
       />
+      
+      {/* HUD Overlay for status */}
+      {frame && (
+        <div className="absolute top-4 right-4 pointer-events-none">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
+            <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest">ENCRYPTED FEED</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -33,7 +33,7 @@ const NAV: NavItem[] = [
 ═══════════════════════════════════════════════════════════════ */
 function Code({ children, inline }: { children: string; inline?: boolean }) {
   if (inline) return (
-    <code className="bg-slate-800/50 border border-slate-700/50 rounded px-1.5 py-0.5 text-[12.5px] font-mono text-blue-300">
+    <code className="bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded px-1.5 py-0.5 text-[12.5px] font-mono text-blue-600 dark:text-blue-300 transition-colors">
       {children}
     </code>
   );
@@ -51,15 +51,15 @@ function CodeBlock({ code, lang="python", title }: { code:string; lang?:string; 
   const highlight = (s: string) => s
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(comments, '<span class="text-slate-500 italic">$1</span>')
-    .replace(strings,  '<span class="text-emerald-400">$1</span>')
-    .replace(keywords, '<span class="text-purple-400 font-semibold">$1</span>');
+    .replace(strings,  '<span class="text-emerald-600 dark:text-emerald-400">$1</span>')
+    .replace(keywords, '<span class="text-purple-600 dark:text-purple-400 font-semibold">$1</span>');
 
   return (
-    <div className="my-6 rounded-xl overflow-hidden border border-slate-800/50 bg-[#060d1a]">
+    <div className="my-6 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-[#060d1a] transition-colors shadow-sm dark:shadow-none">
       {title && (
-        <div className="bg-[#0d1829] px-4 py-2.5 text-[11px] text-slate-500 font-mono border-b border-slate-800/50 flex items-center justify-between">
+        <div className="bg-slate-100 dark:bg-[#0d1829] px-4 py-2.5 text-[11px] text-slate-500 font-mono border-b border-slate-200 dark:border-slate-800/50 flex items-center justify-between">
           <span>{title}</span>
-          <span className="bg-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-400 uppercase tracking-wider">{lang}</span>
+          <span className="bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider transition-colors">{lang}</span>
         </div>
       )}
       <div className="relative group">
@@ -67,13 +67,13 @@ function CodeBlock({ code, lang="python", title }: { code:string; lang?:string; 
           onClick={copy} 
           className={`absolute top-3 right-3 z-10 px-3 py-1 rounded-md text-[10px] font-mono transition-all duration-200 border ${
             copied 
-              ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400" 
-              : "bg-white/5 border-white/10 text-slate-500 opacity-0 group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300"
+              ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-600 dark:text-emerald-400" 
+              : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-slate-400 dark:text-slate-500 opacity-0 group-hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-slate-300"
           }`}
         >
           {copied ? "✓ COPIED" : "COPY"}
         </button>
-        <pre className="p-5 overflow-x-auto text-[13px] leading-relaxed text-slate-300 font-mono scrollbar-thin scrollbar-thumb-slate-800">
+        <pre className="p-5 overflow-x-auto text-[13px] leading-relaxed text-slate-700 dark:text-slate-300 font-mono scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-800 transition-colors">
           <code dangerouslySetInnerHTML={{ __html: highlight(code) }} />
         </pre>
       </div>
@@ -83,7 +83,7 @@ function CodeBlock({ code, lang="python", title }: { code:string; lang?:string; 
 
 function H2({ id, children }: { id?:string; children:React.ReactNode }) {
   return (
-    <h2 id={id} className="text-xl md:text-2xl font-extrabold text-white mt-12 mb-6 pb-2 border-b border-slate-800/50 font-syne flex items-center gap-3 scroll-mt-24">
+    <h2 id={id} className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-12 mb-6 pb-2 border-b border-slate-200 dark:border-slate-800/50 font-syne flex items-center gap-3 scroll-mt-24 transition-colors">
       {children}
     </h2>
   );
@@ -91,7 +91,7 @@ function H2({ id, children }: { id?:string; children:React.ReactNode }) {
 
 function H3({ children }: { children:React.ReactNode }) {
   return (
-    <h3 className="text-lg font-bold text-slate-200 mt-8 mb-4 font-syne flex items-center gap-2">
+    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mt-8 mb-4 font-syne flex items-center gap-2 transition-colors">
       {children}
     </h3>
   );
@@ -99,34 +99,34 @@ function H3({ children }: { children:React.ReactNode }) {
 
 function H4({ children }: { children:React.ReactNode }) {
   return (
-    <h4 className="text-[12px] font-bold text-slate-500 mt-6 mb-2 uppercase tracking-[0.15em] font-mono">
+    <h4 className="text-[12px] font-bold text-slate-400 dark:text-slate-500 mt-6 mb-2 uppercase tracking-[0.15em] font-mono transition-colors">
       {children}
     </h4>
   );
 }
 
 function P({ children }: { children:React.ReactNode }) {
-  return <p className="text-slate-400 leading-relaxed text-[14px] md:text-[15px] mb-4">{children}</p>;
+  return <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[14px] md:text-[15px] mb-4 transition-colors">{children}</p>;
 }
 
 function Table({ headers, rows }: { headers:string[]; rows:(string|React.ReactNode)[][] }) {
   return (
-    <div className="overflow-x-auto my-6 rounded-xl border border-slate-800/50 bg-[#060d1a]/30">
+    <div className="overflow-x-auto my-6 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-[#060d1a]/30 transition-colors shadow-sm dark:shadow-none">
       <table className="w-full border-collapse text-[13px] font-mono">
         <thead>
-          <tr className="bg-[#0d1829]">
+          <tr className="bg-slate-50 dark:bg-[#0d1829] transition-colors">
             {headers.map((h,i) => (
-              <th key={i} className="px-5 py-3 text-left text-blue-400 font-bold text-[11px] uppercase tracking-wider border-b border-blue-900/30 whitespace-nowrap">
+              <th key={i} className="px-5 py-3 text-left text-blue-600 dark:text-blue-400 font-bold text-[11px] uppercase tracking-wider border-b border-blue-100 dark:border-blue-900/30 whitespace-nowrap transition-colors">
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800/30">
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/30">
           {rows.map((row,i) => (
-            <tr key={i} className={`transition-colors hover:bg-white/[0.02] ${i % 2 === 0 ? "bg-transparent" : "bg-white/[0.01]"}`}>
+            <tr key={i} className={`transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.02] ${i % 2 === 0 ? "bg-transparent" : "bg-slate-50/30 dark:bg-white/[0.01]"}`}>
               {row.map((cell,j) => (
-                <td key={j} className={`px-5 py-3 align-top ${j === 0 ? "text-slate-100 font-medium" : "text-slate-400"}`}>
+                <td key={j} className={`px-5 py-3 align-top transition-colors ${j === 0 ? "text-slate-900 dark:text-slate-100 font-medium" : "text-slate-500 dark:text-slate-400"}`}>
                   {cell}
                 </td>
               ))}
@@ -140,21 +140,21 @@ function Table({ headers, rows }: { headers:string[]; rows:(string|React.ReactNo
 
 function Callout({ type="info", title, children }: { type?:"info"|"warn"|"danger"|"success"; title?:string; children:React.ReactNode }) {
   const variants = {
-    info:    { bg:"bg-blue-500/5", border:"border-blue-500/20", icon:"ℹ", text:"text-blue-400", iconBg: "bg-blue-500/10" },
-    warn:    { bg:"bg-amber-500/5", border:"border-amber-500/20", icon:"⚠", text:"text-amber-400", iconBg: "bg-amber-500/10" },
-    danger:  { bg:"bg-rose-500/5", border:"border-rose-500/20", icon:"✖", text:"text-rose-400", iconBg: "bg-rose-500/10" },
-    success: { bg:"bg-emerald-500/5", border:"border-emerald-500/20", icon:"✓", text:"text-emerald-400", iconBg: "bg-emerald-500/10" },
+    info:    { bg:"bg-blue-500/5", border:"border-blue-500/20", icon:"ℹ", text:"text-blue-600 dark:text-blue-400", iconBg: "bg-blue-500/10" },
+    warn:    { bg:"bg-amber-500/5", border:"border-amber-500/20", icon:"⚠", text:"text-amber-600 dark:text-amber-400", iconBg: "bg-amber-500/10" },
+    danger:  { bg:"bg-rose-500/5", border:"border-rose-500/20", icon:"✖", text:"text-rose-600 dark:text-rose-400", iconBg: "bg-rose-500/10" },
+    success: { bg:"bg-emerald-500/5", border:"border-emerald-500/20", icon:"✓", text:"text-emerald-600 dark:text-emerald-400", iconBg: "bg-emerald-500/10" },
   }[type];
 
   return (
-    <div className={`my-6 rounded-xl border p-5 ${variants.bg} ${variants.border}`}>
+    <div className={`my-6 rounded-xl border p-5 transition-colors ${variants.bg} ${variants.border}`}>
       {title && (
         <div className={`text-[12px] font-bold mb-3 flex items-center gap-2 ${variants.text}`}>
           <span className={`size-5 rounded-full flex items-center justify-center text-[10px] ${variants.iconBg}`}>{variants.icon}</span>
           {title}
         </div>
       )}
-      <div className="text-slate-400 text-[14px] leading-relaxed">
+      <div className="text-slate-600 dark:text-slate-400 text-[14px] leading-relaxed transition-colors">
         {children}
       </div>
     </div>
@@ -180,26 +180,26 @@ function Step({ n, title, input, output, children }: { n:number; title:string; i
   return (
     <div className="flex gap-4 md:gap-6 mb-6 group">
       <div className="flex flex-col items-center shrink-0">
-        <div className="size-8 md:size-10 rounded-full bg-blue-600/10 border-2 border-blue-500 flex items-center justify-center text-[14px] font-black text-blue-400 font-mono transition-transform group-hover:scale-110">
+        <div className="size-8 md:size-10 rounded-full bg-blue-600/10 border-2 border-blue-500 flex items-center justify-center text-[14px] font-black text-blue-600 dark:text-blue-400 font-mono transition-all group-hover:scale-110">
           {n}
         </div>
-        <div className="flex-1 w-px bg-slate-800 my-2 group-last:hidden" />
+        <div className="flex-1 w-px bg-slate-200 dark:bg-slate-800 my-2 group-last:hidden transition-colors" />
       </div>
-      <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-xl p-5 hover:bg-white/[0.04] transition-all">
-        <div className="font-bold text-slate-100 text-[16px] mb-2 font-syne">{title}</div>
-        <div className="text-slate-500 text-[14px] leading-relaxed mb-4">{children}</div>
+      <div className="flex-1 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-xl p-5 hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-all shadow-sm dark:shadow-none">
+        <div className="font-bold text-slate-900 dark:text-slate-100 text-[16px] mb-2 font-syne transition-colors">{title}</div>
+        <div className="text-slate-500 dark:text-slate-500 text-[14px] leading-relaxed mb-4 transition-colors">{children}</div>
         {(input || output) && (
-          <div className="flex flex-wrap gap-4 text-[11px] font-mono border-t border-white/5 pt-3 mt-1">
+          <div className="flex flex-wrap gap-4 text-[11px] font-mono border-t border-slate-100 dark:border-white/5 pt-3 mt-1 transition-colors">
             {input && (
               <div className="flex gap-2">
-                <span className="text-slate-600 font-bold uppercase">Input:</span>
-                <span className="text-blue-400/80">{input}</span>
+                <span className="text-slate-400 dark:text-slate-600 font-bold uppercase">Input:</span>
+                <span className="text-blue-600 dark:text-blue-400/80 transition-colors">{input}</span>
               </div>
             )}
             {output && (
               <div className="flex gap-2">
-                <span className="text-slate-600 font-bold uppercase">Output:</span>
-                <span className="text-emerald-400/80">{output}</span>
+                <span className="text-slate-400 dark:text-slate-600 font-bold uppercase">Output:</span>
+                <span className="text-emerald-600 dark:text-emerald-400/80 transition-colors">{output}</span>
               </div>
             )}
           </div>
@@ -213,12 +213,12 @@ function MetricBar({ label, value, color="#3b82f6", max=1 }: { label:string; val
   return (
     <div className="mb-4">
       <div className="flex justify-between items-end mb-1.5 px-0.5">
-        <span className="text-[11px] text-slate-500 font-mono uppercase tracking-wider">{label}</span>
-        <span className="text-[13px] font-bold font-mono" style={{ color }}>{(value).toFixed(4)}</span>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono uppercase tracking-wider transition-colors">{label}</span>
+        <span className="text-[13px] font-bold font-mono transition-colors" style={{ color }}>{(value).toFixed(4)}</span>
       </div>
-      <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden transition-colors">
         <div 
-          className="h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.5)]"
+          className="h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.2)] dark:shadow-[0_0_8px_rgba(0,0,0,0.5)]"
           style={{ 
             width: `${(value/max)*100}%`,
             background: `linear-gradient(90deg, ${color}66, ${color})`
@@ -232,14 +232,14 @@ function MetricBar({ label, value, color="#3b82f6", max=1 }: { label:string; val
 function CellBlock({ title, children }: { title:string; children:React.ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="border border-slate-800/50 rounded-xl my-4 overflow-hidden bg-[#0a1525]/30">
+    <div className="border border-slate-200 dark:border-slate-800/50 rounded-xl my-4 overflow-hidden bg-slate-50/50 dark:bg-[#0a1525]/30 transition-colors shadow-sm dark:shadow-none">
       <button 
         onClick={() => setOpen(o => !o)} 
-        className="w-full bg-[#0a1525] px-4 py-3 flex items-center gap-3 transition-colors hover:bg-blue-900/10 group"
+        className="w-full bg-slate-100 dark:bg-[#0a1525] px-4 py-3 flex items-center gap-3 transition-colors hover:bg-slate-200 dark:hover:bg-blue-900/10 group"
       >
-        <span className={`text-[10px] text-slate-600 transition-transform duration-200 ${open ? "rotate-90" : ""}`}>▶</span>
-        <span className="font-mono text-[11px] text-slate-600 group-hover:text-blue-500 transition-colors">In [·]</span>
-        <span className="text-[13px] font-medium text-slate-300 group-hover:text-slate-100 transition-colors">{title}</span>
+        <span className={`text-[10px] text-slate-400 dark:text-slate-600 transition-transform duration-200 ${open ? "rotate-90" : ""}`}>▶</span>
+        <span className="font-mono text-[11px] text-slate-400 dark:text-slate-600 group-hover:text-blue-600 dark:group-hover:text-blue-500 transition-colors">In [·]</span>
+        <span className="text-[13px] font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">{title}</span>
       </button>
       {open && <div className="p-1">{children}</div>}
     </div>
@@ -287,16 +287,16 @@ MODEL_FILES = {
 function TabOverview() {
   return (
     <div className="space-y-12">
-      <div className="relative overflow-hidden rounded-[2rem] border border-blue-900/30 bg-gradient-to-br from-[#0c1e3f] via-[#071225] to-[#040a14] p-8 md:p-12 shadow-2xl">
-        <div className="absolute -top-24 -right-24 size-96 rounded-full bg-blue-500/10 blur-[120px] pointer-events-none" />
+      <div className="relative overflow-hidden rounded-[2rem] border border-blue-900/10 dark:border-blue-900/30 bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-[#0c1e3f] dark:via-[#071225] dark:to-[#040a14] p-8 md:p-12 shadow-xl dark:shadow-2xl transition-all">
+        <div className="absolute -top-24 -right-24 size-96 rounded-full bg-blue-500/10 dark:bg-blue-500/10 blur-[120px] pointer-events-none" />
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-6 transition-colors">
             <span className="size-1.5 rounded-full bg-blue-500 animate-pulse" />
             Computer Vision · Binary Classification · PyTorch
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-white leading-[1.15] mb-6 font-syne tracking-tight">
+          <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white leading-[1.15] mb-6 font-syne tracking-tight transition-colors">
             Exam Cheating Detection System<br/>
-            <span className="text-blue-500">Complete Documentation</span>
+            <span className="text-blue-600 dark:text-blue-500">Complete Documentation</span>
           </h1>
           <P>
             End-to-end deep learning pipeline that detects cheating behaviour in exam surveillance video. 
@@ -305,9 +305,9 @@ function TabOverview() {
             real-time YOLO-integrated inference.
           </P>
           <div className="flex flex-wrap gap-3 mt-8">
-            {["PyTorch","torchvision","Google Colab","OpenCV","scikit-learn","pandas","seaborn"].map(t=><Badge key={t} color="#3b82f6">{t}</Badge>)}
-            <Badge color="#22c55e">97.80% Accuracy</Badge>
-            <Badge color="#a78bfa">ROC-AUC 0.9999</Badge>
+            {["PyTorch","torchvision","Google Colab","OpenCV","scikit-learn","pandas","seaborn"].map(t=><Badge key={t} color="#2563eb">{t}</Badge>)}
+            <Badge color="#16a34a">97.80% Accuracy</Badge>
+            <Badge color="#7c3aed">ROC-AUC 0.9999</Badge>
           </div>
         </div>
       </div>
@@ -673,9 +673,9 @@ function TabModels() {
       <H2>Model Deep Dive</H2>
       <div className="space-y-6">
         {models.map(m=>(
-          <div key={m.name} className="bg-[#060d1a] border border-white/5 rounded-2xl p-6 md:p-8" style={{ borderLeftColor: m.color, borderLeftWidth: '4px' }}>
-            <h3 className="text-xl font-bold text-white mb-6 font-syne">{m.name}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-black/20 p-6 rounded-xl border border-white/5">
+          <div key={m.name} className="bg-white dark:bg-[#060d1a] border border-slate-200 dark:border-white/5 rounded-2xl p-6 md:p-8 transition-colors shadow-sm dark:shadow-none" style={{ borderLeftColor: m.color, borderLeftWidth: '4px' }}>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 font-syne transition-colors">{m.name}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-slate-50 dark:bg-black/20 p-6 rounded-xl border border-slate-100 dark:border-white/5 transition-colors">
               <MetricBar label="Accuracy" value={m.acc} color={m.color}/>
               <MetricBar label="F1-Score" value={m.f1} color={m.color}/>
               <MetricBar label="ROC-AUC"  value={m.auc} color={m.color}/>
@@ -684,7 +684,7 @@ function TabModels() {
               {m.facts.map((f,i) => (
                 <div key={i} className="flex gap-3 items-center">
                   <div className="size-1.5 rounded-full" style={{ backgroundColor: m.color }} />
-                  <span className="text-[13px] text-slate-400 font-mono">{f}</span>
+                  <span className="text-[13px] text-slate-600 dark:text-slate-400 font-mono transition-colors">{f}</span>
                 </div>
               ))}
             </div>
@@ -745,12 +745,12 @@ function TabFAQ() {
       <H2>FAQ & Common Pitfalls</H2>
       <div className="grid gap-4">
         {faqs.map((f,i)=>(
-          <div key={i} className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 hover:bg-white/[0.04] transition-all group">
+          <div key={i} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-6 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all group shadow-sm dark:shadow-none">
             <div className="flex gap-4 items-start mb-2">
-              <span className="size-8 rounded-lg bg-blue-600/10 border border-blue-600/30 flex items-center justify-center text-blue-400 font-bold font-mono text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">Q{i+1}</span>
-              <div className="font-bold text-slate-200 text-base font-syne">{f.q}</div>
+              <span className="size-8 rounded-lg bg-blue-600/10 border border-blue-600/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold font-mono text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">Q{i+1}</span>
+              <div className="font-bold text-slate-800 dark:text-slate-200 text-base font-syne transition-colors">{f.q}</div>
             </div>
-            <div className="pl-12 text-slate-500 text-sm leading-relaxed">{f.a}</div>
+            <div className="pl-12 text-slate-500 dark:text-slate-500 text-sm leading-relaxed transition-colors">{f.a}</div>
           </div>
         ))}
       </div>
@@ -799,19 +799,19 @@ export default function FullDocumentation() {
   };
 
   return (
-    <div className="min-h-screen bg-[#040a14] text-[#e2e8f0] flex flex-col md:flex-row font-sans selection:bg-blue-500/30 overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#040a14] text-slate-900 dark:text-[#e2e8f0] flex flex-col md:flex-row font-sans selection:bg-blue-500/30 overflow-hidden transition-colors duration-300">
       
       {/* ── Mobile Header ── */}
-      <div className="md:hidden sticky top-0 z-50 bg-[#040a14]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <div className="md:hidden sticky top-0 z-50 bg-white/80 dark:bg-[#040a14]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
             <Book className="size-5 text-white" />
           </div>
-          <span className="font-bold text-sm tracking-tight text-white">Full Documentation</span>
+          <span className="font-bold text-sm tracking-tight text-slate-900 dark:text-white transition-colors">Full Documentation</span>
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-white/5 border border-white/10 text-slate-300 active:scale-95 transition-transform"
+          className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 active:scale-95 transition-all"
         >
           {isSidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
@@ -827,17 +827,17 @@ export default function FullDocumentation() {
 
       {/* ── Sidebar ── */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-72 bg-[#040a14] border-r border-white/5 transition-transform duration-300 md:relative md:translate-x-0 md:flex md:flex-col",
+        "fixed inset-y-0 left-0 z-50 w-72 bg-slate-50 dark:bg-[#040a14] border-r border-slate-200 dark:border-white/5 transition-all duration-300 md:relative md:translate-x-0 md:flex md:flex-col",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="px-6 py-8 border-b border-white/5">
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500 mb-2 font-mono">ML Documentation</div>
-          <h1 className="text-lg font-extrabold text-white leading-tight font-syne">
+        <div className="px-6 py-8 border-b border-slate-200 dark:border-white/5 transition-colors">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-500 mb-2 font-mono transition-colors">ML Documentation</div>
+          <h1 className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight font-syne transition-colors">
             Exam Cheating <br/><span className="text-slate-500 text-sm font-medium">Detection System</span>
           </h1>
           <div className="flex gap-2 mt-4">
-            <Badge color="#22c55e">97.80%</Badge>
-            <Badge color="#3b82f6">PyTorch</Badge>
+            <Badge color="#16a34a">97.80%</Badge>
+            <Badge color="#2563eb">PyTorch</Badge>
           </div>
         </div>
 
@@ -852,54 +852,54 @@ export default function FullDocumentation() {
                 className={cn(
                   "flex w-full items-start gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
                   isActive 
-                    ? "bg-blue-600/10 text-blue-400" 
-                    : "text-slate-500 hover:text-slate-200 hover:bg-white/[0.03]"
+                    ? "bg-blue-600/10 text-blue-600 dark:text-blue-400" 
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/[0.03]"
                 )}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-blue-500" />
+                  <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-blue-600 dark:bg-blue-500" />
                 )}
                 <Icon className={cn(
-                  "size-4.5 mt-0.5 shrink-0",
-                  isActive ? "text-blue-500" : "text-slate-600"
+                  "size-4.5 mt-0.5 shrink-0 transition-colors",
+                  isActive ? "text-blue-600 dark:text-blue-500" : "text-slate-400 dark:text-slate-600"
                 )} />
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
                     <span className={cn(
-                      "text-[13px] font-bold",
-                      isActive ? "text-slate-100" : "text-slate-400"
+                      "text-[13px] font-bold transition-colors",
+                      isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"
                     )}>
                       {n.label}
                     </span>
                     {n.badge && (
-                      <span className="text-[8px] font-black bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 px-1.5 py-0.5 rounded-full uppercase">
+                      <span className="text-[8px] font-black bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-500 px-1.5 py-0.5 rounded-full uppercase transition-colors">
                         {n.badge}
                       </span>
                     )}
                   </div>
-                  {n.sub && <div className="text-[10px] text-slate-600 font-mono mt-0.5">{n.sub}</div>}
+                  {n.sub && <div className="text-[10px] text-slate-400 dark:text-slate-600 font-mono mt-0.5 transition-colors">{n.sub}</div>}
                 </div>
               </button>
             )
           })}
         </nav>
 
-        <div className="px-6 py-4 border-t border-white/5 mt-auto bg-black/20">
-          <div className="text-[10px] text-slate-600 font-mono">
-            <div className="flex justify-between mb-1"><span>Artifacts:</span><span className="text-slate-400">7 Notebooks</span></div>
-            <div className="flex justify-between"><span>Engine:</span><span className="text-blue-500 font-bold">Custom CNN</span></div>
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-white/5 mt-auto bg-slate-100 dark:bg-black/20 transition-colors">
+          <div className="text-[10px] text-slate-500 dark:text-slate-600 font-mono transition-colors">
+            <div className="flex justify-between mb-1"><span>Artifacts:</span><span className="text-slate-900 dark:text-slate-400">7 Notebooks</span></div>
+            <div className="flex justify-between"><span>Engine:</span><span className="text-blue-600 dark:text-blue-500 font-bold transition-colors">Custom CNN</span></div>
           </div>
         </div>
       </aside>
 
-      <main ref={mainRef} className="flex-1 h-screen overflow-y-auto overflow-x-hidden relative">
+      <main ref={mainRef} className="flex-1 h-screen overflow-y-auto overflow-x-hidden relative transition-colors">
         <div className="px-6 py-8 md:px-12 md:py-16">
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <CurrentTab />
           </div>
           <div className="h-24 md:h-32" />
         </div>
-        <div className="fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#040a14] to-transparent pointer-events-none md:left-72" />
+        <div className="fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-[#040a14] to-transparent pointer-events-none md:left-72 transition-colors" />
       </main>
     </div>
   );

@@ -77,8 +77,8 @@ export function CreateSessionModal({
     >
       <DialogContent
         className={cn(
-          "max-w-2xl! border-white/5 bg-[#0D121F]/90 p-0 backdrop-blur-2xl overflow-hidden",
-          "shadow-[0_0_100px_rgba(0,0,0,0.8)]"
+          "max-w-2xl! border-slate-200 dark:border-white/5 bg-white/95 dark:bg-[#0D121F]/90 p-0 backdrop-blur-2xl overflow-hidden transition-all",
+          "shadow-2xl dark:shadow-[0_0_100px_rgba(0,0,0,0.8)]"
         )}
       >
         {/* Top accent bar */}
@@ -87,14 +87,14 @@ export function CreateSessionModal({
         {/* Header */}
         <div className="px-8 pt-8 pb-6">
           <div className="flex items-center gap-4 mb-2">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-[#3B9EE8]/10 border border-[#3B9EE8]/20 shadow-lg shadow-[#3B9EE8]/5">
-              <Plus className="size-6 text-[#3B9EE8]" />
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-500/10 dark:bg-[#3B9EE8]/10 border border-blue-500/20 dark:border-[#3B9EE8]/20 shadow-lg shadow-blue-500/5 dark:shadow-[#3B9EE8]/5 transition-colors">
+              <Plus className="size-6 text-blue-600 dark:text-[#3B9EE8]" />
             </div>
             <DialogHeader className="space-y-1 text-left">
-              <DialogTitle className="text-2xl font-bold text-white tracking-tight">
+              <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight transition-colors">
                 New Session
               </DialogTitle>
-              <DialogDescription className="text-sm text-[#94A3B8]">
+              <DialogDescription className="text-sm text-slate-500 dark:text-[#94A3B8] transition-colors">
                 Initialize a new real-time or offline proctoring instance.
               </DialogDescription>
             </DialogHeader>
@@ -111,8 +111,8 @@ export function CreateSessionModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={cn(
-                "h-12 border-white/5 bg-white/5 px-4 text-white placeholder:text-white/20 transition-all",
-                "focus:bg-white/[0.08] focus:border-[#3B9EE8]/50 focus:ring-1 focus:ring-[#3B9EE8]/20"
+                "h-12 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 px-4 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 transition-all",
+                "focus:bg-slate-100 dark:focus:bg-white/[0.08] focus:border-blue-500/50 dark:focus:border-[#3B9EE8]/50 focus:ring-1 focus:ring-blue-500/20 dark:focus:ring-[#3B9EE8]/20"
               )}
             />
           </div>
@@ -126,14 +126,14 @@ export function CreateSessionModal({
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
                 className={cn(
-                  "h-12 border-white/5 bg-white/5 pl-12 text-white font-mono placeholder:text-white/20 transition-all",
-                  "focus:bg-white/[0.08] focus:border-[#3B9EE8]/50 focus:ring-1 focus:ring-[#3B9EE8]/20"
+                  "h-12 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 pl-12 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-white/20 transition-all",
+                  "focus:bg-slate-100 dark:focus:bg-white/[0.08] focus:border-blue-500/50 dark:focus:border-[#3B9EE8]/50 focus:ring-1 focus:ring-blue-500/20 dark:focus:ring-[#3B9EE8]/20"
                 )}
               />
-              <Video className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/30" />
+              <Video className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-400 dark:text-white/30 transition-colors" />
             </div>
-            <p className="text-[10px] text-[#94A3B8] font-mono flex items-center gap-2">
-              <span className="text-[#3B9EE8]">TIP:</span> Use 0 for default webcam or enter a local file path.
+            <p className="text-[10px] text-slate-500 dark:text-[#94A3B8] font-mono flex items-center gap-2 transition-colors">
+              <span className="text-blue-600 dark:text-[#3B9EE8]">TIP:</span> Use 0 for default webcam or enter a local file path.
             </p>
           </div>
 
@@ -149,7 +149,7 @@ export function CreateSessionModal({
         </div>
 
         {/* Footer */}
-        <div className="mt-8 flex justify-end gap-3 bg-white/[0.02] px-8 py-6 border-t border-white/5">
+        <div className="mt-8 flex justify-end gap-3 bg-slate-50 dark:bg-white/[0.02] px-8 py-6 border-t border-slate-200 dark:border-white/5 transition-colors">
           <PremiumButton
             variant="ghost"
             disabled={busy}
