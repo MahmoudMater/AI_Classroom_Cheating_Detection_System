@@ -151,7 +151,7 @@ export function DocumentationLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 px-6 py-8 md:px-12 md:py-12 overflow-x-hidden">
-        <div className="max-w-5xl mx-auto">
+        <div className="">
           {children}
         </div>
       </main>
