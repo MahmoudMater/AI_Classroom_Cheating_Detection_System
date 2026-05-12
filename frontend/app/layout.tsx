@@ -53,7 +53,7 @@ export default function RootLayout({
       <body className="bg-[#070B14] min-h-screen text-white selection:bg-[#3B9EE8]/30 selection:text-[#3B9EE8]">
         <ThemeProvider>
           <Header />
-          <main className="pt-20">
+          <main >
             {children}
           </main>
           <Toaster />
