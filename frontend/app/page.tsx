@@ -30,7 +30,8 @@ const ANCHOR_SCROLL =
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen bg-slate-100 text-slate-900 transition-colors selection:bg-[#3B9EE8]/30 selection:text-[#3B9EE8] dark:bg-[#070B14] dark:text-white dark:selection:text-[#3B9EE8]">
+    // bg-slate-100 text-slate-900
+    <main className="relative min-h-screen  transition-colors selection:bg-[#3B9EE8]/30 selection:text-[#3B9EE8] dark:bg-[#070B14] dark:text-white dark:selection:text-[#3B9EE8]">
       {/* Ambient grid + glows (match app shell) */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-40 -right-40 size-80 rounded-full bg-[#3B9EE8]/10 blur-[100px] dark:opacity-100 opacity-60" />
