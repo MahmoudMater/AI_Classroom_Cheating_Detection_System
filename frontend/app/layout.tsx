@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
+import { Header } from "@/components/Header"
 
 export const metadata: Metadata = {
   title: "ProctorAI — AI Classroom Cheating Detection",
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 const merriweather = Merriweather({
   subsets: ["latin"],
   variable: "--font-serif",
+  weight: ["300", "400", "700", "900"],
 })
 
 const fontSans = Geist({
@@ -39,7 +41,6 @@ export default function RootLayout({
         "antialiased",
         fontSans.variable,
         fontMono.variable,
-        "font-serif",
         merriweather.variable
       )}
     >
@@ -49,9 +50,12 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
         />
       </head>
-      <body>
+      <body className="bg-[#070B14] min-h-screen text-white selection:bg-[#3B9EE8]/30 selection:text-[#3B9EE8]">
         <ThemeProvider>
-          {children}
+          <Header />
+          <main className="pt-20">
+            {children}
+          </main>
           <Toaster />
         </ThemeProvider>
       </body>

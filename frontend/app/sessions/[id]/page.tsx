@@ -9,68 +9,134 @@ import { LiveFeed } from "@/components/proctoring/LiveFeed"
 import { StatsPanel } from "@/components/proctoring/StatsPanel"
 import { SummaryCharts } from "@/components/proctoring/SummaryCharts"
 import { UploadVideoModal } from "@/components/proctoring/UploadVideoModal"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { exportEventsUrl } from "@/lib/api"
 import { useProctoring } from "@/lib/hooks/useProctoring"
 import { useSession } from "@/lib/hooks/useSession"
 import type { EventResponse, FrameMessage, SessionStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { LiveDot } from "@/components/brand-ui"
 
-function sessionStatusBadge(status: SessionStatus) {
-  switch (status) {
-    case "running":
-      return "border-green-600/40 bg-green-600/15 text-green-700 dark:text-green-400"
-    case "stopped":
-      return "border-blue-600/40 bg-blue-600/15 text-blue-700 dark:text-blue-400"
-    case "error":
-      return "border-red-600/40 bg-red-600/15 text-red-700 dark:text-red-400"
-    default:
-      return "border-border bg-muted text-muted-foreground"
+// ─── Status badge ─────────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: SessionStatus }) {
+  if (status === "running") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.08)] px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-[#10B981]">
+        <LiveDot />RUNNING
+      </span>
+    )
   }
+  if (status === "stopped") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(59,158,232,0.25)] bg-[rgba(59,158,232,0.08)] px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-[#3B9EE8]">
+        STOPPED
+      </span>
+    )
+  }
+  if (status === "error") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.08)] px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-[#EF4444]">
+        ERROR
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(100,116,139,0.2)] bg-[rgba(100,116,139,0.08)] px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-[#64748B]">
+      {status}
+    </span>
+  )
 }
 
+// ─── Tab button ───────────────────────────────────────────────────────────────
+function TabBtn({ active, onClick, icon, children }: {
+  active: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 border-b-2 px-4 py-2.5 font-['Space_Grotesk',sans-serif] text-[12px] font-semibold tracking-wide transition-all",
+        active
+          ? "border-[#3B9EE8] text-[#3B9EE8]"
+          : "border-transparent text-[#64748B] hover:text-[#E2E8F0]"
+      )}
+    >
+      {icon}
+      {children}
+    </button>
+  )
+}
+
+// ─── Control button ───────────────────────────────────────────────────────────
+function CtrlBtn({ onClick, disabled, variant = "primary", children }: {
+  onClick: () => void
+  disabled?: boolean
+  variant?: "primary" | "secondary" | "ghost"
+  children: React.ReactNode
+}) {
+  const variantCls = {
+    primary: "bg-[#3B9EE8] text-white hover:bg-[#60C5F4]",
+    secondary: "bg-[rgba(59,158,232,0.1)] text-[#3B9EE8] border border-[rgba(59,158,232,0.3)] hover:bg-[rgba(59,158,232,0.18)]",
+    ghost: "border border-[rgba(59,158,232,0.18)] text-[#94A3B8] hover:border-[rgba(59,158,232,0.35)] hover:text-[#E2E8F0]",
+  }[variant]
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "flex h-9 items-center gap-1.5 rounded-lg px-4 font-['Space_Grotesk',sans-serif] text-[13px] font-semibold transition-all",
+        variantCls,
+        "disabled:cursor-not-allowed disabled:opacity-40"
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function SessionDetailPage() {
   const params = useParams()
   const id = typeof params.id === "string" ? params.id : ""
 
   const { session, loading, notFound, start, stop, upload } = useSession(id)
-  const proctoring = useProctoring(
-    !id || loading || notFound ? null : id
-  )
+  const proctoring = useProctoring(!id || loading || notFound ? null : id)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [tab, setTab] = useState("events")
   const [liveCheating, setLiveCheating] = useState<EventResponse[]>([])
   const [busy, setBusy] = useState(false)
 
   const appendLiveFromFrame = useCallback((frame: FrameMessage) => {
-      if (!session) return
-      setLiveCheating((prev) => {
-        const additions: EventResponse[] = []
-        for (const p of frame.persons) {
-          if (p.verdict !== "CHEATING") continue
-          const eid = `live-${frame.frame_index}-${p.id}-${frame.timestamp}`
-          if (prev.some((x) => x.id === eid)) continue
-          additions.push({
-            id: eid,
-            session_id: session.id,
-            person_id: p.id,
-            verdict: "CHEATING",
-            cheat_prob: p.cheat_prob,
-            direction: p.direction,
-            obj_nearby: p.obj_nearby,
-            obj_name: p.obj_name,
-            reasons: p.reasons ?? [],
-            frame_index: frame.frame_index,
-            occurred_at: frame.timestamp,
-          })
-        }
-        if (additions.length === 0) return prev
-        return [...additions, ...prev].slice(0, 400)
-      })
+    if (!session) return
+    setLiveCheating((prev) => {
+      const additions: EventResponse[] = []
+      for (const p of frame.persons) {
+        if (p.verdict !== "CHEATING") continue
+        const eid = `live-${frame.frame_index}-${p.id}-${frame.timestamp}`
+        if (prev.some((x) => x.id === eid)) continue
+        additions.push({
+          id: eid,
+          session_id: session.id,
+          person_id: p.id,
+          verdict: "CHEATING",
+          cheat_prob: p.cheat_prob,
+          direction: p.direction,
+          obj_nearby: p.obj_nearby,
+          obj_name: p.obj_name,
+          reasons: p.reasons ?? [],
+          frame_index: frame.frame_index,
+          occurred_at: frame.timestamp,
+        })
+      }
+      if (additions.length === 0) return prev
+      return [...additions, ...prev].slice(0, 400)
+    })
   }, [session])
 
   useEffect(() => {
@@ -79,132 +145,122 @@ export default function SessionDetailPage() {
     appendLiveFromFrame(f)
   }, [proctoring.lastFrame, appendLiveFromFrame])
 
+  // ── Error states ──
   if (!id) {
     return (
-      <main className="bg-background min-h-svh p-8">
-        <p className="text-muted-foreground text-sm">Invalid session id.</p>
-      </main>
+      <div className="p-8">
+        <p className="font-mono text-[13px] text-[#64748B]">Invalid session id.</p>
+      </div>
     )
   }
-
   if (loading) {
     return (
-      <main className="bg-background min-h-svh p-8">
-        <p className="text-muted-foreground text-sm">Loading session…</p>
-      </main>
+      <div className="p-8">
+        <div className="flex items-center gap-3">
+          <div className="size-4 animate-spin rounded-full border-2 border-[#3B9EE8] border-t-transparent" />
+          <p className="font-mono text-[13px] text-[#64748B]">Loading session…</p>
+        </div>
+      </div>
     )
   }
-
   if (notFound || !session) {
     return (
-      <main className="bg-background flex min-h-svh flex-col items-start gap-4 p-8">
-        <h1 className="text-xl font-semibold">Session not found</h1>
-        <p className="text-muted-foreground text-sm">
-          This session does not exist or was deleted.
-        </p>
-        <Button asChild variant="outline">
-          <Link href="/">Back to dashboard</Link>
-        </Button>
-      </main>
+      <div className="flex flex-col items-start gap-4 p-8">
+        <h1 className="text-xl font-bold text-[#E2E8F0]">Session not found</h1>
+        <p className="font-mono text-[13px] text-[#64748B]">This session does not exist or was deleted.</p>
+        <Link
+          href="/"
+          className="flex h-9 items-center gap-2 rounded-lg border border-[rgba(59,158,232,0.25)] bg-transparent px-4 text-[13px] font-semibold text-[#3B9EE8] transition-all hover:bg-[rgba(59,158,232,0.08)]"
+        >
+          ← Back to dashboard
+        </Link>
+      </div>
     )
   }
 
   const running = session.status === "running"
-  const showWsError =
-    proctoring.status === "error" && (proctoring.error?.length ?? 0) > 0
+  const showWsError = proctoring.status === "error" && (proctoring.error?.length ?? 0) > 0
 
   return (
-    <main className="bg-background text-foreground min-h-svh p-4 md:p-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/">← Dashboard</Link>
-          </Button>
-        </div>
+    <div className="p-4 text-[#E2E8F0] md:p-8">
+      <div className="flex flex-col gap-5">
 
-        {showWsError ? (
-          <div
-            className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border px-4 py-3 text-sm"
-            role="alert"
-          >
+        {/* ── WS error banner ── */}
+        {showWsError && (
+          <div className="flex items-center gap-2.5 rounded-xl border border-[rgba(239,68,68,0.3)] border-l-2 border-l-[#EF4444] bg-[rgba(239,68,68,0.06)] px-4 py-3 font-mono text-[12px] text-[#FCA5A5]" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" className="size-4 shrink-0 text-[#EF4444]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
             {proctoring.error}
           </div>
-        ) : null}
+        )}
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        {/* ── Main layout ── */}
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+
+          {/* ── Left: feed + controls ── */}
           <section className="flex min-w-0 flex-1 flex-col gap-4 lg:basis-[60%]">
+
+            {/* Session header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
+                <h1 className="text-xl font-bold tracking-tight text-[#E2E8F0] md:text-2xl">
                   {session.title}
                 </h1>
-                <p className="text-muted-foreground mt-1 text-xs">
+                <p className="mt-0.5 font-mono text-[11px] text-[#64748B]">
                   Source:{" "}
-                  <code className="bg-muted rounded px-1 py-0.5">
+                  <code className="rounded bg-[rgba(59,158,232,0.1)] px-1.5 py-0.5 text-[#60C5F4]">
                     {session.source}
                   </code>
                 </p>
               </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "w-fit shrink-0 capitalize",
-                  sessionStatusBadge(session.status)
-                )}
-              >
-                {session.status === "running" ? (
-                  <span className="flex items-center gap-1.5">
-                    <span className="size-1.5 animate-pulse rounded-full bg-green-600 dark:bg-green-400" />
-                    {session.status}
-                  </span>
-                ) : (
-                  session.status
-                )}
-              </Badge>
+              <StatusBadge status={session.status} />
             </div>
 
+            {/* Controls */}
             <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
+              <CtrlBtn
                 disabled={busy || running}
                 onClick={async () => {
                   setBusy(true)
-                  try {
-                    await start()
-                  } finally {
-                    setBusy(false)
-                  }
+                  try { await start() } finally { setBusy(false) }
                 }}
+                variant="primary"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
                 Start
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
+              </CtrlBtn>
+              <CtrlBtn
                 disabled={busy || !running}
                 onClick={async () => {
                   setBusy(true)
-                  try {
-                    await stop()
-                  } finally {
-                    setBusy(false)
-                  }
+                  try { await stop() } finally { setBusy(false) }
                 }}
+                variant="secondary"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+                </svg>
                 Stop
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
+              </CtrlBtn>
+              <CtrlBtn
                 disabled={running}
                 onClick={() => setUploadOpen(true)}
+                variant="ghost"
               >
-                Upload video
-              </Button>
+                <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+                Upload Video
+              </CtrlBtn>
             </div>
 
+            {/* Live Feed */}
             <LiveFeed frame={proctoring.lastFrame} />
 
+            {/* Stats */}
             <StatsPanel
               fps={proctoring.fps}
               personCount={proctoring.personCount}
@@ -213,70 +269,84 @@ export default function SessionDetailPage() {
             />
           </section>
 
-          <section className="flex w-full min-w-0 flex-col gap-4 lg:basis-[40%]">
-            <Tabs value={tab} onValueChange={setTab} className="gap-4">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="events">Live Events</TabsTrigger>
-                <TabsTrigger value="summary">Summary</TabsTrigger>
-                <TabsTrigger value="export">Export</TabsTrigger>
-              </TabsList>
-              <TabsContent value="events" className="mt-0">
-                <Card size="sm">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Event log</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <EventLog sessionId={id} liveEvents={liveCheating} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="summary" className="mt-0">
-                <Card size="sm">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Summary</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {tab === "summary" ? (
-                      <SummaryCharts sessionId={id} />
-                    ) : null}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="export" className="mt-0">
-                <Card size="sm">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Export</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-4">
-                    <p className="text-muted-foreground text-sm">
-                      Download all logged events as CSV from the backend.
+          {/* ── Right: tabs ── */}
+          <section className="flex w-full min-w-0 flex-col gap-0 lg:basis-[40%]">
+            <div className="overflow-hidden rounded-xl border border-[rgba(59,158,232,0.18)] bg-[#151C2C]">
+
+              {/* Tab list */}
+              <div className="flex border-b border-[rgba(59,158,232,0.12)] px-1">
+                <TabBtn
+                  active={tab === "events"}
+                  onClick={() => setTab("events")}
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
+                  }
+                >
+                  Live Events
+                </TabBtn>
+                <TabBtn
+                  active={tab === "summary"}
+                  onClick={() => setTab("summary")}
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/>
+                    </svg>
+                  }
+                >
+                  Summary
+                </TabBtn>
+                <TabBtn
+                  active={tab === "export"}
+                  onClick={() => setTab("export")}
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                  }
+                >
+                  Export
+                </TabBtn>
+              </div>
+
+              {/* Tab panels */}
+              <div className="p-4">
+                {tab === "events" && (
+                  <EventLog sessionId={id} liveEvents={liveCheating} />
+                )}
+                {tab === "summary" && (
+                  <SummaryCharts sessionId={id} />
+                )}
+                {tab === "export" && (
+                  <div className="flex flex-col gap-4">
+                    <p className="text-[13px] text-[#94A3B8]">
+                      Download all logged events as a CSV file from the backend.
                     </p>
-                    <Button
+                    <button
                       type="button"
-                      variant="secondary"
-                      onClick={() =>
-                        window.open(
-                          exportEventsUrl(id),
-                          "_blank",
-                          "noopener,noreferrer"
-                        )
-                      }
+                      onClick={() => window.open(exportEventsUrl(id), "_blank", "noopener,noreferrer")}
+                      className="flex h-9 w-fit items-center gap-2 rounded-lg bg-[rgba(59,158,232,0.1)] border border-[rgba(59,158,232,0.3)] px-4 font-['Space_Grotesk',sans-serif] text-[13px] font-semibold text-[#3B9EE8] transition-all hover:bg-[rgba(59,158,232,0.18)]"
                     >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                      </svg>
                       Download CSV
-                    </Button>
-                    <Separator />
+                    </button>
+                    <div className="h-px bg-[rgba(59,158,232,0.1)]" />
                     <div>
-                      <p className="text-muted-foreground text-xs uppercase">
-                        Server log path
+                      <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">
+                        Server Log Path
                       </p>
-                      <code className="bg-muted mt-1 block break-all rounded-lg p-2 text-xs">
+                      <code className="block break-all rounded-lg border border-[rgba(59,158,232,0.12)] bg-[#0A0F1A] p-3 font-mono text-[11px] text-[#60C5F4]">
                         {session.log_csv ?? "— (run session to generate)"}
                       </code>
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                  </div>
+                )}
+              </div>
+            </div>
           </section>
         </div>
       </div>
@@ -286,6 +356,6 @@ export default function SessionDetailPage() {
         onOpenChange={setUploadOpen}
         onUpload={(file) => upload(file)}
       />
-    </main>
+    </div>
   )
 }

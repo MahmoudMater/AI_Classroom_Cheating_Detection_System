@@ -1,6 +1,5 @@
 "use client"
 
-import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Alert02Icon,
   Book01Icon,
@@ -9,11 +8,10 @@ import {
   Notebook01Icon,
   SmartPhone01Icon,
 } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getEventSummary } from "@/lib/api"
 import type { EventSummary } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -22,38 +20,10 @@ export interface SummaryChartsProps {
   sessionId: string
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 const CONFIDENCE_RANGES = ["0-20%", "20-40%", "40-60%", "60-80%", "80-100%"]
-const CONFIDENCE_FILLS = ["#14b8a6", "#3b82f6", "#f59e0b", "#f97316", "#ef4444"]
-
-const HEAT_BG = [
-  "bg-amber-500/5",
-  "bg-amber-500/10",
-  "bg-amber-500/20",
-  "bg-amber-500/30",
-  "bg-amber-500/40",
-  "bg-amber-500/50",
-  "bg-amber-500/60",
-  "bg-amber-500/70",
-  "bg-amber-500/80",
-  "bg-amber-500/90",
-]
-
-function scoreTone(score0to100: number) {
-  if (score0to100 < 30)
-    return {
-      text: "text-green-600 dark:text-green-400",
-      stroke: "#16a34a",
-    }
-  if (score0to100 <= 70)
-    return {
-      text: "text-amber-600 dark:text-amber-400",
-      stroke: "#d97706",
-    }
-  return {
-    text: "text-red-600 dark:text-red-400",
-    stroke: "#dc2626",
-  }
-}
+const CONFIDENCE_COLORS = ["#10B981", "#3B9EE8", "#F59E0B", "#f97316", "#EF4444"]
 
 function formatPeakMinute(raw: string | null): string {
   if (raw == null || raw === "") return "None"
@@ -72,72 +42,10 @@ function formatPeakMinute(raw: string | null): string {
   return raw
 }
 
-function RiskRing({ score, stroke }: { score: number; stroke: string }) {
-  const r = 36
-  const c = 2 * Math.PI * r
-  const p = Math.min(100, Math.max(0, score)) / 100
-  const dash = c * (1 - p)
-  return (
-    <svg viewBox="0 0 100 100" className="size-28 shrink-0" aria-hidden>
-      <circle
-        cx="50"
-        cy="50"
-        r={r}
-        fill="none"
-        className="stroke-muted stroke-[8]"
-      />
-      <circle
-        cx="50"
-        cy="50"
-        r={r}
-        fill="none"
-        stroke={stroke}
-        strokeWidth="8"
-        strokeDasharray={`${c} ${c}`}
-        strokeDashoffset={dash}
-        transform="rotate(-90 50 50)"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function ObjectGlyph({ name }: { name: string }) {
-  const n = name.toLowerCase()
-  let icon = Alert02Icon
-  if (n.includes("phone") || n.includes("mobile")) icon = SmartPhone01Icon
-  else if (n.includes("book")) icon = Book01Icon
-  else if (n.includes("laptop")) icon = LaptopIcon
-  else if (n.includes("notebook") || n.includes("paper")) icon = Notebook01Icon
-  return (
-    <HugeiconsIcon
-      icon={icon}
-      strokeWidth={1.75}
-      className="text-muted-foreground size-8"
-    />
-  )
-}
-
-function SummarySkeleton() {
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} size="sm">
-            <CardContent className="p-4">
-              <div className="bg-muted h-4 w-24 animate-pulse rounded" />
-              <div className="bg-muted mt-3 h-10 w-20 animate-pulse rounded" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <Card size="sm">
-        <CardContent className="p-4">
-          <div className="bg-muted h-40 w-full animate-pulse rounded-lg" />
-        </CardContent>
-      </Card>
-    </div>
-  )
+function scoreTone(score0to100: number) {
+  if (score0to100 < 30) return { text: "text-[#10B981]", stroke: "#10B981" }
+  if (score0to100 <= 70) return { text: "text-[#F59E0B]", stroke: "#F59E0B" }
+  return { text: "text-[#EF4444]", stroke: "#EF4444" }
 }
 
 function buildDirKeys(data: EventSummary | null): string[] {
@@ -145,21 +53,18 @@ function buildDirKeys(data: EventSummary | null): string[] {
   const fromHeat = [...new Set(data.direction_over_time.map((d) => d.direction))]
   const fromAgg = Object.keys(data.events_by_direction)
   const merged = [...new Set([...fromHeat, ...fromAgg])]
-  const scored = merged
-    .map((d) => ({
-      d,
-      c: data.events_by_direction[d] ?? 0,
-    }))
+  return merged
+    .map((d) => ({ d, c: data.events_by_direction[d] ?? 0 }))
     .sort((a, b) => b.c - a.c)
-  return scored.slice(0, 6).map((s) => s.d)
+    .slice(0, 6)
+    .map((s) => s.d)
 }
 
 function buildMinuteCols(data: EventSummary | null): string[] {
   if (!data) return []
   const mins = [...new Set(data.direction_over_time.map((d) => d.minute))]
   mins.sort((a, b) => {
-    const na = Number(a)
-    const nb = Number(b)
+    const na = Number(a); const nb = Number(b)
     if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb
     return String(a).localeCompare(String(b))
   })
@@ -180,6 +85,71 @@ function buildByPerson(data: EventSummary | null) {
   return [...m.entries()].sort((a, b) => a[0] - b[0])
 }
 
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+function ObjectGlyph({ name }: { name: string }) {
+  const n = name.toLowerCase()
+  let icon = Alert02Icon
+  if (n.includes("phone") || n.includes("mobile")) icon = SmartPhone01Icon
+  else if (n.includes("book")) icon = Book01Icon
+  else if (n.includes("laptop")) icon = LaptopIcon
+  else if (n.includes("notebook") || n.includes("paper")) icon = Notebook01Icon
+  return <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-7 text-[#94A3B8]" />
+}
+
+function RiskRing({ score, stroke }: { score: number; stroke: string }) {
+  const r = 34
+  const c = 2 * Math.PI * r
+  const p = Math.min(100, Math.max(0, score)) / 100
+  return (
+    <svg viewBox="0 0 88 88" className="size-24 shrink-0" aria-hidden>
+      <circle cx="44" cy="44" r={r} fill="none" className="stroke-[rgba(59,158,232,0.1)]" strokeWidth="7" />
+      <circle
+        cx="44" cy="44" r={r} fill="none"
+        stroke={stroke} strokeWidth="7"
+        strokeDasharray={`${c} ${c}`}
+        strokeDashoffset={c * (1 - p)}
+        transform="rotate(-90 44 44)"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function Skeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-28 animate-pulse rounded-xl bg-[rgba(59,158,232,0.06)] border border-[rgba(59,158,232,0.1)]" />
+        ))}
+      </div>
+      <div className="h-44 animate-pulse rounded-xl bg-[rgba(59,158,232,0.06)] border border-[rgba(59,158,232,0.1)]" />
+    </div>
+  )
+}
+
+function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("rounded-xl border border-[rgba(59,158,232,0.15)] bg-[#151C2C]", className)}>
+      {children}
+    </div>
+  )
+}
+
+function CardHead({ title, icon }: { title: string; icon: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 border-b border-[rgba(59,158,232,0.1)] px-4 py-3">
+      <span className="text-[#3B9EE8]">{icon}</span>
+      <h3 className="font-['Space_Grotesk',sans-serif] text-[12px] font-semibold uppercase tracking-[0.06em] text-[#94A3B8]">
+        {title}
+      </h3>
+    </div>
+  )
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
+
 export function SummaryCharts({ sessionId }: SummaryChartsProps) {
   const [data, setData] = useState<EventSummary | null>(null)
   const [loading, setLoading] = useState(false)
@@ -193,313 +163,227 @@ export function SummaryCharts({ sessionId }: SummaryChartsProps) {
         const s = await getEventSummary(sessionId)
         if (!cancelled) setData(s)
       } catch (e) {
-        if (!cancelled) {
-          toast.error(
-            e instanceof Error ? e.message : "Failed to load summary"
-          )
-        }
+        if (!cancelled) toast.error(e instanceof Error ? e.message : "Failed to load summary")
       } finally {
         if (!cancelled) setLoading(false)
       }
     })()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [sessionId])
 
   const dirKeys = useMemo(() => buildDirKeys(data), [data])
   const minuteCols = useMemo(() => buildMinuteCols(data), [data])
   const byPerson = useMemo(() => buildByPerson(data), [data])
 
-  if (loading && !data) {
-    return <SummarySkeleton />
-  }
-
-  if (!data) {
-    return (
-      <p className="text-muted-foreground text-sm">No summary data yet.</p>
-    )
-  }
+  if (loading && !data) return <Skeleton />
+  if (!data) return <p className="text-[13px] text-[#64748B]">No summary data yet.</p>
 
   const riskPct = Math.min(100, Math.max(0, data.risk_score))
   const cheatRatePct = Math.min(100, Math.max(0, data.cheating_rate * 100))
   const riskStyle = scoreTone(riskPct)
   const rateStyle = scoreTone(cheatRatePct)
 
+  // Timeline chart
   const timeline = data.timeline
   const maxT = Math.max(1, ...timeline.map((t) => t.cheating + t.ok))
-  const chartW = 480
-  const chartH = 160
-  const pad = 32
-  const innerW = chartW - pad * 2
-  const innerH = chartH - pad * 2
   const nT = timeline.length
-  const pointsCheating = timeline.map((t, i) => {
-    const x = pad + (nT <= 1 ? innerW / 2 : (i / (nT - 1)) * innerW)
-    const y = pad + innerH - (t.cheating / maxT) * innerH
-    return { x, y, cheating: t.cheating, ok: t.ok, minute: t.minute }
-  })
-  const pointsOk = timeline.map((t, i) => {
-    const x = pad + (nT <= 1 ? innerW / 2 : (i / (nT - 1)) * innerW)
-    const y = pad + innerH - (t.ok / maxT) * innerH
-    return { x, y }
-  })
+  const chartW = 460; const chartH = 120; const pad = 24; const iW = chartW - pad * 2; const iH = chartH - pad * 2
+  const toX = (i: number) => pad + (nT <= 1 ? iW / 2 : (i / (nT - 1)) * iW)
+  const toY = (v: number) => pad + iH - (v / maxT) * iH
+  const cheatingPts = timeline.map((t, i) => ({ x: toX(i), y: toY(t.cheating), ...t }))
+  const okPts = timeline.map((t, i) => ({ x: toX(i), y: toY(t.ok) }))
 
-  const confMap = new Map(
-    data.confidence_distribution.map((c) => [c.range, c.count])
-  )
-  const confRows = CONFIDENCE_RANGES.map((range) => ({
-    range,
-    count: confMap.get(range) ?? 0,
-  }))
+  // Confidence
+  const confMap = new Map(data.confidence_distribution.map((c) => [c.range, c.count]))
+  const confRows = CONFIDENCE_RANGES.map((range) => ({ range, count: confMap.get(range) ?? 0 }))
   const maxConf = Math.max(1, ...confRows.map((r) => r.count))
 
+  // Direction over time heatmap
   const dirTime = data.direction_over_time
-  const heatMax = Math.max(1, ...dirTime.map((d) => d.count), 1)
-
+  const heatMax = Math.max(1, ...dirTime.map((d) => d.count))
   const heatCell = (dir: string, minute: string) => {
-    const cell = dirTime.find(
-      (d) => d.direction === dir && d.minute === minute
-    )
-    const c = cell?.count ?? 0
+    const c = dirTime.find((d) => d.direction === dir && d.minute === minute)?.count ?? 0
     const op = c / heatMax
-    const idx = Math.min(
-      HEAT_BG.length - 1,
-      Math.floor(op * HEAT_BG.length)
-    )
-    return { c, heatClass: HEAT_BG[idx] }
+    return { c, opacity: op }
   }
 
-  const directionsBreakdown = Object.entries(data.events_by_direction).sort(
-    (a, b) => b[1] - a[1]
-  )
-  const totalDir = Math.max(
-    1,
-    directionsBreakdown.reduce((s, [, v]) => s + v, 0)
-  )
-
+  const directionsBreakdown = Object.entries(data.events_by_direction).sort((a, b) => b[1] - a[1])
+  const totalDir = Math.max(1, directionsBreakdown.reduce((s, [, v]) => s + v, 0))
   const suspiciousId = data.most_suspicious_person?.person_id
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
+
+      {/* ── KPI row ── */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card size="sm">
-          <CardContent className="flex flex-col items-center gap-2 p-4">
-            <div className="relative flex items-center justify-center">
-              <RiskRing score={riskPct} stroke={riskStyle.stroke} />
-              <span
-                className={cn(
-                  "absolute text-3xl font-bold tabular-nums",
-                  riskStyle.text
-                )}
-              >
-                {riskPct.toFixed(0)}
-              </span>
-            </div>
-            <p className="text-muted-foreground text-center text-xs font-medium">
-              Risk Score
-            </p>
-          </CardContent>
+        {/* Risk ring */}
+        <Card className="flex flex-col items-center gap-1 p-4">
+          <div className="relative flex items-center justify-center">
+            <RiskRing score={riskPct} stroke={riskStyle.stroke === "text-[#10B981]" ? "#10B981" : riskStyle.stroke === "text-[#F59E0B]" ? "#F59E0B" : "#EF4444"} />
+            <span className={cn("absolute font-mono text-2xl font-bold tabular-nums", riskStyle.text)}>
+              {riskPct.toFixed(0)}
+            </span>
+          </div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Risk Score</p>
         </Card>
-        <Card size="sm">
-          <CardContent className="flex flex-col justify-center gap-1 p-4">
-            <p className={cn("text-3xl font-bold tabular-nums", rateStyle.text)}>
-              {cheatRatePct.toFixed(1)}%
-            </p>
-            <p className="text-muted-foreground text-xs font-medium">
-              Cheating rate
-            </p>
-          </CardContent>
+
+        {/* Cheating rate */}
+        <Card className="flex flex-col justify-center gap-1 p-4">
+          <p className={cn("font-mono text-3xl font-bold tabular-nums", rateStyle.text)}>
+            {cheatRatePct.toFixed(1)}%
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Cheating rate</p>
         </Card>
-        <Card size="sm">
-          <CardContent className="flex flex-col justify-center gap-1 p-4">
-            <p className="text-foreground text-xl font-semibold tabular-nums">
-              {formatPeakMinute(data.peak_cheating_minute)}
-            </p>
-            <p className="text-muted-foreground text-xs font-medium">
-              Peak cheating minute
-            </p>
-          </CardContent>
+
+        {/* Peak minute */}
+        <Card className="flex flex-col justify-center gap-1 p-4">
+          <p className="font-mono text-2xl font-bold tabular-nums text-[#E2E8F0]">
+            {formatPeakMinute(data.peak_cheating_minute)}
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Peak minute</p>
         </Card>
-        <Card size="sm">
-          <CardContent className="flex flex-col justify-center gap-1 p-4">
-            <p className="text-foreground text-xl font-semibold">
-              {data.most_suspicious_person
-                ? `Person ${data.most_suspicious_person.person_id}`
-                : "None"}
-            </p>
-            <p className="text-muted-foreground text-xs">
-              {data.most_suspicious_person
-                ? `${data.most_suspicious_person.cheating_events} incidents`
-                : "—"}
-            </p>
-          </CardContent>
+
+        {/* Most suspicious */}
+        <Card className="flex flex-col justify-center gap-2 p-4">
+          <p className="text-[15px] font-bold text-[#F59E0B]">
+            {data.most_suspicious_person ? `Person ${data.most_suspicious_person.person_id}` : "None"}
+          </p>
+          {data.most_suspicious_person && (
+            <span className="inline-flex w-fit items-center rounded-full border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.08)] px-2 py-0.5 font-mono text-[9px] font-bold text-[#EF4444]">
+              {data.most_suspicious_person.cheating_events} incidents
+            </span>
+          )}
+          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#64748B]">Most suspicious</p>
         </Card>
       </div>
 
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Cheating activity over time
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* ── Timeline chart ── */}
+      <Card>
+        <CardHead title="Cheating activity over time" icon={
+          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        } />
+        <div className="p-4">
           {timeline.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No timeline data yet</p>
+            <p className="text-[13px] text-[#64748B]">No timeline data yet</p>
           ) : (
             <>
-              <svg
-                viewBox={`0 0 ${chartW} ${chartH}`}
-                className="bg-muted/30 w-full max-w-full rounded-lg border border-border"
-                role="img"
-                aria-label="Cheating versus OK over time"
-              >
-                {pointsCheating.map((p, i) => (
-                  <circle
-                    key={`c-${i}`}
-                    cx={p.x}
-                    cy={p.y}
-                    r={3}
-                    className="fill-red-600"
-                  >
-                    <title>{`Minute ${p.minute}: cheating ${p.cheating}, ok ${p.ok}`}</title>
+              <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" role="img" aria-label="Activity over time">
+                {/* Grid lines */}
+                {[0.25, 0.5, 0.75].map((f) => (
+                  <line key={f} x1={pad} y1={pad + iH * (1 - f)} x2={chartW - pad} y2={pad + iH * (1 - f)}
+                    stroke="rgba(59,158,232,0.06)" strokeWidth="1" />
+                ))}
+                {/* Cheating fill */}
+                <path
+                  fill="rgba(239,68,68,0.1)"
+                  d={[
+                    `M ${cheatingPts[0]?.x} ${chartH - pad}`,
+                    ...cheatingPts.map((p) => `L ${p.x} ${p.y}`),
+                    `L ${cheatingPts[cheatingPts.length - 1]?.x} ${chartH - pad}`,
+                    "Z",
+                  ].join(" ")}
+                />
+                {/* OK fill */}
+                <path
+                  fill="rgba(16,185,129,0.07)"
+                  d={[
+                    `M ${okPts[0]?.x} ${chartH - pad}`,
+                    ...okPts.map((p) => `L ${p.x} ${p.y}`),
+                    `L ${okPts[okPts.length - 1]?.x} ${chartH - pad}`,
+                    "Z",
+                  ].join(" ")}
+                />
+                {/* Lines */}
+                <polyline fill="none" stroke="#EF4444" strokeWidth="1.5" opacity={0.9}
+                  points={cheatingPts.map((p) => `${p.x},${p.y}`).join(" ")} />
+                <polyline fill="none" stroke="#10B981" strokeWidth="1.5" opacity={0.9}
+                  points={okPts.map((p) => `${p.x},${p.y}`).join(" ")} />
+                {/* Dots */}
+                {cheatingPts.map((p, i) => (
+                  <circle key={`c${i}`} cx={p.x} cy={p.y} r={2.5} fill="#EF4444">
+                    <title>{`Min ${p.minute}: cheating ${p.cheating}, ok ${p.ok}`}</title>
                   </circle>
                 ))}
-                {pointsOk.map((p, i) => (
-                  <circle
-                    key={`o-${i}`}
-                    cx={p.x}
-                    cy={p.y}
-                    r={3}
-                    className="fill-green-600"
-                  >
-                    <title>{`Minute ${timeline[i]?.minute}: ok ${timeline[i]?.ok}`}</title>
+                {okPts.map((p, i) => (
+                  <circle key={`o${i}`} cx={p.x} cy={p.y} r={2.5} fill="#10B981">
+                    <title>{`Min ${timeline[i]?.minute}: ok ${timeline[i]?.ok}`}</title>
                   </circle>
                 ))}
-                <polyline
-                  fill="none"
-                  stroke="#DC2626"
-                  strokeWidth="2"
-                  opacity={0.85}
-                  points={pointsCheating.map((p) => `${p.x},${p.y}`).join(" ")}
-                />
-                <polyline
-                  fill="none"
-                  stroke="#16A34A"
-                  strokeWidth="2"
-                  opacity={0.85}
-                  points={pointsOk.map((p) => `${p.x},${p.y}`).join(" ")}
-                />
               </svg>
-              <div className="mt-2 flex flex-wrap gap-4 text-xs">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block size-2 rounded-full bg-red-600" />
-                  Cheating
+              <div className="mt-2 flex gap-4">
+                <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#94A3B8]">
+                  <span className="inline-block size-2 rounded-full bg-[#EF4444]" />CHEATING
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block size-2 rounded-full bg-green-600" />
-                  OK
+                <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#94A3B8]">
+                  <span className="inline-block size-2 rounded-full bg-[#10B981]" />OK
                 </span>
               </div>
             </>
           )}
-        </CardContent>
+        </div>
       </Card>
 
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Cheat probability distribution
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* ── Confidence distribution ── */}
+      <Card>
+        <CardHead title="Cheat probability distribution" icon={
+          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/>
+          </svg>
+        } />
+        <div className="flex flex-col gap-2 p-4">
           {data.total_events === 0 && confRows.every((r) => r.count === 0) ? (
-            <p className="text-muted-foreground text-sm">
-              No events recorded yet
-            </p>
-          ) : (
-            <svg
-              viewBox="0 0 420 140"
-              className="w-full max-w-full"
-              role="img"
-              aria-label="Confidence distribution"
-            >
-              {confRows.map((row, i) => {
-                const y = 8 + i * 26
-                const bw = (row.count / maxConf) * 300
-                return (
-                  <g key={row.range}>
-                    <text
-                      x={4}
-                      y={y + 14}
-                      className="fill-muted-foreground text-[11px]"
-                    >
-                      {row.range}
-                    </text>
-                    <rect
-                      x={88}
-                      y={y}
-                      width={bw}
-                      height={18}
-                      rx={4}
-                      fill={CONFIDENCE_FILLS[i] ?? "#71717a"}
-                    />
-                    <text
-                      x={88 + bw + 8}
-                      y={y + 14}
-                      className="fill-muted-foreground text-[11px] tabular-nums"
-                    >
-                      {row.count}
-                    </text>
-                  </g>
-                )
-              })}
-            </svg>
-          )}
-        </CardContent>
+            <p className="text-[13px] text-[#64748B]">No events recorded yet</p>
+          ) : confRows.map((row, i) => (
+            <div key={row.range} className="flex items-center gap-3">
+              <span className="w-10 shrink-0 text-right font-mono text-[10px] text-[#64748B]">{row.range}</span>
+              <div className="relative h-4 flex-1 overflow-hidden rounded bg-[rgba(255,255,255,0.04)]">
+                <div
+                  className="h-full rounded transition-all duration-500"
+                  style={{ width: `${(row.count / maxConf) * 100}%`, background: CONFIDENCE_COLORS[i] ?? "#64748B", opacity: 0.85 }}
+                />
+              </div>
+              <span className="w-6 shrink-0 font-mono text-[10px] text-[#64748B] tabular-nums">{row.count}</span>
+            </div>
+          ))}
+        </div>
       </Card>
 
+      {/* ── Direction heatmap + breakdown ── */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-base">Direction over time</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
+        <Card>
+          <CardHead title="Direction over time" icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+            </svg>
+          } />
+          <div className="overflow-x-auto p-4">
             {dirTime.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No direction-over-time data yet
-              </p>
+              <p className="text-[13px] text-[#64748B]">No direction-over-time data yet</p>
             ) : (
               <div
-                className="grid gap-0"
-                style={{
-                  gridTemplateColumns: `minmax(4rem,auto) repeat(${minuteCols.length}, minmax(1.75rem,1fr))`,
-                }}
+                className="grid gap-0.5"
+                style={{ gridTemplateColumns: `minmax(4rem, auto) repeat(${minuteCols.length}, minmax(22px, 1fr))` }}
               >
                 <div />
                 {minuteCols.map((m) => (
-                  <div
-                    key={m}
-                    className="text-muted-foreground border-b border-border px-0.5 pb-1 text-center text-[10px] leading-tight"
-                    title={m}
-                  >
-                    {m.length > 5 ? `${m.slice(0, 5)}…` : m}
+                  <div key={m} className="pb-1 text-center font-mono text-[9px] leading-tight text-[#64748B] truncate" title={m}>
+                    {m.length > 5 ? `${m.slice(0, 4)}…` : m}
                   </div>
                 ))}
                 {dirKeys.map((dir) => (
                   <div key={dir} className="contents">
-                    <div className="text-muted-foreground flex items-center border-r border-border py-1 pr-2 text-xs">
+                    <div className="flex items-center border-r border-[rgba(59,158,232,0.1)] pr-2 py-0.5 font-mono text-[9px] text-[#94A3B8] truncate">
                       {dir.length > 12 ? `${dir.slice(0, 12)}…` : dir}
                     </div>
                     {minuteCols.map((min) => {
-                      const { c, heatClass } = heatCell(dir, min)
+                      const { c, opacity } = heatCell(dir, min)
                       return (
                         <div
                           key={`${dir}-${min}`}
-                          className={cn(
-                            "m-0.5 size-8 rounded-sm border border-border/40",
-                            heatClass
-                          )}
+                          className="m-0.5 size-5 rounded-sm border border-[rgba(59,158,232,0.08)]"
+                          style={{ background: `rgba(245,158,11,${opacity * 0.8})` }}
                           title={`${dir} @ ${min}: ${c}`}
                         />
                       )
@@ -508,193 +392,176 @@ export function SummaryCharts({ sessionId }: SummaryChartsProps) {
                 ))}
               </div>
             )}
-          </CardContent>
+          </div>
         </Card>
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-base">Direction breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
+
+        <Card>
+          <CardHead title="Direction breakdown" icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          } />
+          <div className="flex flex-col gap-2 p-4">
             {directionsBreakdown.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No direction data</p>
-            ) : (
-              <svg
-                viewBox={`0 0 400 ${Math.max(48, directionsBreakdown.length * 22 + 16)}`}
-                className="bg-muted/30 w-full max-w-full rounded-lg border border-border"
-                role="img"
-              >
-                {directionsBreakdown.map(([dir, count], i) => {
-                  const y = 12 + i * 22
-                  const maxC = Math.max(...directionsBreakdown.map(([, v]) => v))
-                  const bw = (count / maxC) * 280
-                  const pct = ((count / totalDir) * 100).toFixed(1)
-                  return (
-                    <g key={dir}>
-                      <text
-                        x={4}
-                        y={y + 12}
-                        className="fill-muted-foreground text-[10px]"
-                      >
-                        {dir.length > 16 ? `${dir.slice(0, 16)}…` : dir}
-                      </text>
-                      <rect
-                        x={90}
-                        y={y}
-                        width={bw}
-                        height={14}
-                        rx={4}
-                        className="fill-primary"
-                      />
-                      <text
-                        x={90 + bw + 6}
-                        y={y + 12}
-                        className="fill-muted-foreground text-[10px]"
-                      >
-                        {count} ({pct}%)
-                      </text>
-                    </g>
-                  )
-                })}
-              </svg>
-            )}
-          </CardContent>
+              <p className="text-[13px] text-[#64748B]">No direction data</p>
+            ) : directionsBreakdown.map(([dir, count]) => {
+              const maxC = Math.max(...directionsBreakdown.map(([, v]) => v))
+              return (
+                <div key={dir} className="flex items-center gap-3">
+                  <span className="w-24 shrink-0 truncate font-mono text-[10px] text-[#94A3B8]" title={dir}>
+                    {dir}
+                  </span>
+                  <div className="relative h-4 flex-1 overflow-hidden rounded bg-[rgba(255,255,255,0.04)]">
+                    <div
+                      className="h-full rounded bg-[#3B9EE8]"
+                      style={{ width: `${(count / maxC) * 100}%`, opacity: 0.7 }}
+                    />
+                  </div>
+                  <span className="w-14 shrink-0 text-right font-mono text-[10px] text-[#64748B]">
+                    {count} ({((count / totalDir) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              )
+            })}
+          </div>
         </Card>
       </div>
 
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle className="text-base">Detected objects</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* ── Detected objects ── */}
+      <Card>
+        <CardHead title="Detected objects" icon={
+          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        } />
+        <div className="p-4">
           {data.object_detections.length === 0 ? (
-            <div className="text-green-600 dark:text-green-400 flex items-center gap-2 text-sm">
-              <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-5" />
+            <div className="flex items-center gap-2 text-[13px] text-[#10B981]">
+              <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" />
               No suspicious objects detected
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {data.object_detections.map((obj) => (
-                <Card key={obj.name} size="sm" className="ring-1 ring-border">
-                  <CardContent className="flex items-center gap-3 p-4">
+                <div
+                  key={obj.name}
+                  className="flex items-center gap-3 rounded-lg border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.05)] p-3"
+                >
+                  <div className="flex size-10 items-center justify-center rounded-lg border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.08)]">
                     <ObjectGlyph name={obj.name} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium capitalize">{obj.name}</p>
-                      <Badge variant="destructive" className="mt-1">
-                        {obj.count}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold capitalize text-[#E2E8F0]">{obj.name}</p>
+                    <span className="inline-flex items-center rounded-full border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.1)] px-2 py-0.5 font-mono text-[9px] font-bold text-[#EF4444] mt-0.5">
+                      {obj.count} detection{obj.count !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle className="text-base">Activity per person</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* ── Activity per person ── */}
+      <Card>
+        <CardHead title="Activity per person" icon={
+          <svg xmlns="http://www.w3.org/2000/svg" className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        } />
+        <div className="flex flex-col gap-3 p-4">
           {byPerson.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              No per-person timeline yet
-            </p>
-          ) : (
-            byPerson.map(([pid, rows]) => {
-              const w = 320
-              const barW = rows.length ? w / rows.length : w
-              return (
-                <div
-                  key={pid}
-                  className={cn(
-                    "flex flex-col gap-2 sm:flex-row sm:items-center",
-                    suspiciousId === pid &&
-                      "border-amber-500/60 rounded-lg border-l-4 pl-3"
-                  )}
-                >
-                  <p
-                    className={cn(
-                      "w-28 shrink-0 text-sm font-medium",
-                      suspiciousId === pid &&
-                        "text-amber-700 dark:text-amber-400"
-                    )}
-                  >
+            <p className="text-[13px] text-[#64748B]">No per-person timeline yet</p>
+          ) : byPerson.map(([pid, rows]) => {
+            const w = 320
+            const barW = rows.length ? w / rows.length : w
+            const isSuspicious = suspiciousId === pid
+            return (
+              <div
+                key={pid}
+                className={cn(
+                  "flex flex-col gap-2 rounded-lg p-2 sm:flex-row sm:items-center",
+                  isSuspicious && "border-l-2 border-[#F59E0B] bg-[rgba(245,158,11,0.04)] pl-3"
+                )}
+              >
+                <div className="flex items-center gap-2 sm:w-28 sm:shrink-0">
+                  <div className={cn(
+                    "flex size-6 items-center justify-center rounded-full border text-[10px] font-bold",
+                    isSuspicious
+                      ? "border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.12)] text-[#F59E0B]"
+                      : "border-[rgba(59,158,232,0.3)] bg-[rgba(59,158,232,0.08)] text-[#3B9EE8]"
+                  )}>
+                    {pid}
+                  </div>
+                  <p className={cn("text-[12px] font-semibold", isSuspicious ? "text-[#F59E0B]" : "text-[#94A3B8]")}>
                     Person {pid}
                   </p>
-                  <svg
-                    viewBox={`0 0 ${w} 36`}
-                    className="h-9 w-full max-w-md"
-                    preserveAspectRatio="none"
-                  >
-                    {rows.map((r, i) => {
-                      const x = i * barW
-                      const total = r.cheating + r.ok || 1
-                      const ch = (r.cheating / total) * 32
-                      const okh = (r.ok / total) * 32
-                      return (
-                        <g key={`${pid}-${r.minute}`}>
-                          <rect
-                            x={x + 1}
-                            y={32 - ch}
-                            width={Math.max(2, barW - 2)}
-                            height={ch}
-                            className="fill-red-600/90"
-                          >
-                            <title>{`${r.minute}: cheating ${r.cheating}, ok ${r.ok}`}</title>
-                          </rect>
-                          <rect
-                            x={x + 1}
-                            y={32 - ch - okh}
-                            width={Math.max(2, barW - 2)}
-                            height={okh}
-                            className="fill-green-600/90"
-                          >
-                            <title>{`${r.minute}: cheating ${r.cheating}, ok ${r.ok}`}</title>
-                          </rect>
-                        </g>
-                      )
-                    })}
-                  </svg>
                 </div>
-              )
-            })
-          )}
-        </CardContent>
+                <svg viewBox={`0 0 ${w} 36`} className="h-9 w-full max-w-md" preserveAspectRatio="none" aria-hidden>
+                  {rows.map((r, i) => {
+                    const x = i * barW
+                    const total = r.cheating + r.ok || 1
+                    const ch = (r.cheating / total) * 32
+                    const okh = (r.ok / total) * 32
+                    return (
+                      <g key={`${pid}-${r.minute}`}>
+                        <rect x={x + 1} y={32 - ch} width={Math.max(2, barW - 2)} height={ch} fill="#EF4444" opacity={0.8}>
+                          <title>{`${r.minute}: cheating ${r.cheating}`}</title>
+                        </rect>
+                        <rect x={x + 1} y={32 - ch - okh} width={Math.max(2, barW - 2)} height={okh} fill="#10B981" opacity={0.7}>
+                          <title>{`${r.minute}: ok ${r.ok}`}</title>
+                        </rect>
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+            )
+          })}
+        </div>
       </Card>
 
-      {data.most_suspicious_person ? (
-        <Card
-          size="sm"
-          className="border-amber-500/50 bg-amber-50/80 dark:bg-amber-950/30"
-        >
-          <CardHeader>
-            <CardTitle className="text-base">Highest risk individual</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <h3 className="text-lg font-semibold">
-              Person {data.most_suspicious_person.person_id}
+      {/* ── Highest risk individual ── */}
+      {data.most_suspicious_person && (
+        <div className="rounded-xl border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.05)] p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-lg border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.1)] text-[#F59E0B]">
+              <svg xmlns="http://www.w3.org/2000/svg" className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </span>
+            <h3 className="font-['Space_Grotesk',sans-serif] text-[13px] font-bold uppercase tracking-[0.06em] text-[#F59E0B]">
+              Highest Risk Individual
             </h3>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <span>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <p className="text-[18px] font-bold text-[#E2E8F0]">
+              Person {data.most_suspicious_person.person_id}
+            </p>
+            <div className="flex flex-wrap gap-3 text-[12px]">
+              <span className="text-[#94A3B8]">
                 Incidents:{" "}
-                <strong className="tabular-nums">
+                <strong className="font-mono text-[#EF4444] tabular-nums">
                   {data.most_suspicious_person.cheating_events}
                 </strong>
               </span>
-              <span>
-                Cheating rate:{" "}
-                <strong className="tabular-nums">
+              <span className="text-[#94A3B8]">
+                Rate:{" "}
+                <strong className="font-mono text-[#EF4444] tabular-nums">
                   {(data.most_suspicious_person.cheating_rate * 100).toFixed(1)}%
                 </strong>
               </span>
-              <Badge variant="outline" className="capitalize">
+              <span className="inline-flex items-center rounded-full border border-[rgba(59,158,232,0.25)] bg-[rgba(59,158,232,0.08)] px-2 py-0.5 font-mono text-[10px] capitalize text-[#3B9EE8]">
                 {data.most_suspicious_person.dominant_direction}
-              </Badge>
+              </span>
             </div>
-          </CardContent>
-        </Card>
-      ) : null}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
