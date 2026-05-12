@@ -347,11 +347,11 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {[
-              { initials: "MM", name: "Mahmoud Mater", role: "Custom CNN", color: "#3B9EE8" },
-              { initials: "AS", name: "Ahmed Salem", role: "EfficientNet", color: "#10B981" },
-              { initials: "KH", name: "Khaled Hassan", role: "ViT Architecture", color: "#F59E0B" },
-              { initials: "YE", name: "Youssef Eid", role: "MobileNetV2", color: "#EF4444" },
-              { initials: "OM", name: "Omar Mohamed", role: "ResNet18", color: "#A855F7" },
+              { initials: "AS", name: "Ahmed Salah", role: "MobileNet V2", color: "#3B9EE8" },
+              { initials: "RM", name: "Rahma Mohamed", role: "Vision Transformer", color: "#10B981" },
+              { initials: "MM", name: "Mahmoud Mater", role: "Custom CNN", color: "#F59E0B" },
+              { initials: "MM", name: "Mariam Mohamed", role: "ResNet18", color: "#EF4444" },
+              { initials: "RA", name: "Randa Ashraf", role: "EfficientNet-B0", color: "#A855F7" },
             ].map(member => (
               <GlassCard key={member.name} className="p-8 flex flex-col items-center text-center border-white/5 group">
                 <div 
