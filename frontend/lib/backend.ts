@@ -29,7 +29,7 @@ export interface SnapshotRecord {
   timestamp: string
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000"
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {

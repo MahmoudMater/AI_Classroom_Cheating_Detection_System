@@ -1,8 +1,15 @@
 import { Geist, Geist_Mono, Merriweather } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
+
+export const metadata: Metadata = {
+  title: "ProctorAI — AI Classroom Cheating Detection",
+  description: "Real-time exam proctoring powered by YOLOv8 and deep learning",
+}
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -36,8 +43,17 @@ export default function RootLayout({
         merriweather.variable
       )}
     >
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+        />
+      </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
